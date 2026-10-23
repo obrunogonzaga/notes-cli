@@ -1,0 +1,195 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-10-23T04:22:08.974645+00:00",
+  "cli_version": "notes 0.1.0",
+  "mode": "automated",
+  "human_participation": false,
+  "result": "passed",
+  "commands": 16,
+  "transcript": [
+    {
+      "actor": "verification",
+      "args": [
+        "--version"
+      ],
+      "exit_code": 0,
+      "stdout": "notes 0.1.0\n",
+      "stderr": ""
+    },
+    {
+      "actor": "bruno",
+      "args": [
+        "init"
+      ],
+      "exit_code": 0,
+      "stdout": "Projeto checkout: 77e3603d-946c-4287-8c8d-f4678bea77ce\n<sandbox>/checkout/.notes-project\n",
+      "stderr": ""
+    },
+    {
+      "actor": "bruno",
+      "args": [
+        "add",
+        "--to",
+        "agents",
+        "--author",
+        "bruno"
+      ],
+      "exit_code": 0,
+      "stdout": "[checkout / 77e3603d-946c-4287-8c8d-f4678bea77ce #1] # Contexto do login\n<sandbox>/data/notes/projects/77e3603d-946c-4287-8c8d-f4678bea77ce/001.md\n",
+      "stderr": ""
+    },
+    {
+      "actor": "bruno",
+      "args": [
+        "add",
+        "Preferir respostas em português",
+        "--global",
+        "--to",
+        "agents"
+      ],
+      "exit_code": 0,
+      "stdout": "[global / global #1] Preferir respostas em português\n<sandbox>/data/notes/global/001.md\n",
+      "stderr": ""
+    },
+    {
+      "actor": "agent",
+      "args": [
+        "context",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"schema_version\": 1, \"notes\": [{\"schema_version\": 1, \"id\": 1, \"title\": \"Preferir respostas em português\", \"author\": \"bruno\", \"to\": \"agents\", \"status\": \"active\", \"created_at\": \"2026-10-23T04:22:08.237556Z\", \"updated_at\": \"2026-10-23T04:22:08.237556Z\", \"revision\": \"1-6da25b50996ad79e0729dabebaa4f20e7e4f4fe4ffce4c04d37010d69f656d15\", \"revision_number\": 1, \"body\": \"Preferir respostas em português\", \"path\": \"<sandbox>/data/notes/global/001.md\", \"scope\": {\"kind\": \"global\", \"id\": \"global\", \"name\": \"global\"}}, {\"schema_version\": 1, \"id\": 1, \"title\": \"# Contexto do login\", \"author\": \"bruno\", \"to\": \"agents\", \"status\": \"active\", \"created_at\": \"2026-10-23T04:22:08.190414Z\", \"updated_at\": \"2026-10-23T04:22:08.190414Z\", \"revision\": \"1-cc285bd80916cca5ddd9b30d1596f48050bc0e33413b01e04a03b07dc36b33af\", \"revision_number\": 1, \"body\": \"# Contexto do login\\n\\nLeia docs/auth.md. Preservar sessões existentes.\\n\", \"path\": \"<sandbox>/data/notes/projects/77e3603d-946c-4287-8c8d-f4678bea77ce/001.md\", \"scope\": {\"kind\": \"project\", \"id\": \"77e3603d-946c-4287-8c8d-f4678bea77ce\", \"name\": \"checkout\"}}], \"omitted\": [], \"limit\": 12000, \"used_characters\": 231, \"errors\": []}\n",
+      "stderr": ""
+    },
+    {
+      "actor": "agent",
+      "args": [
+        "add",
+        "Escolher o provedor de e-mail antes dos envios.",
+        "--to",
+        "bruno",
+        "--author",
+        "codex"
+      ],
+      "exit_code": 0,
+      "stdout": "[checkout / 77e3603d-946c-4287-8c8d-f4678bea77ce #2] Escolher o provedor de e-mail antes dos envios.\n<sandbox>/data/notes/projects/77e3603d-946c-4287-8c8d-f4678bea77ce/002.md\n",
+      "stderr": ""
+    },
+    {
+      "actor": "bruno-new-session",
+      "args": [
+        "context",
+        "--to",
+        "bruno",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"schema_version\": 1, \"notes\": [{\"schema_version\": 1, \"id\": 2, \"title\": \"Escolher o provedor de e-mail antes dos envios.\", \"author\": \"codex\", \"to\": \"bruno\", \"status\": \"active\", \"created_at\": \"2026-10-23T04:22:08.341704Z\", \"updated_at\": \"2026-10-23T04:22:08.341704Z\", \"revision\": \"1-8293426162f31151b081d8c0b4a04c650b312210814038e0f93d8993594a3b9b\", \"revision_number\": 1, \"body\": \"Escolher o provedor de e-mail antes dos envios.\", \"path\": \"<sandbox>/data/notes/projects/77e3603d-946c-4287-8c8d-f4678bea77ce/002.md\", \"scope\": {\"kind\": \"project\", \"id\": \"77e3603d-946c-4287-8c8d-f4678bea77ce\", \"name\": \"checkout\"}}], \"omitted\": [], \"limit\": 12000, \"used_characters\": 150, \"errors\": []}\n",
+      "stderr": ""
+    },
+    {
+      "actor": "bruno-new-session",
+      "args": [
+        "read",
+        "2",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"schema_version\": 1, \"note\": {\"schema_version\": 1, \"id\": 2, \"title\": \"Escolher o provedor de e-mail antes dos envios.\", \"author\": \"codex\", \"to\": \"bruno\", \"status\": \"active\", \"created_at\": \"2026-10-23T04:22:08.341704Z\", \"updated_at\": \"2026-10-23T04:22:08.341704Z\", \"revision\": \"1-8293426162f31151b081d8c0b4a04c650b312210814038e0f93d8993594a3b9b\", \"revision_number\": 1, \"body\": \"Escolher o provedor de e-mail antes dos envios.\", \"path\": \"<sandbox>/data/notes/projects/77e3603d-946c-4287-8c8d-f4678bea77ce/002.md\", \"scope\": {\"kind\": \"project\", \"id\": \"77e3603d-946c-4287-8c8d-f4678bea77ce\", \"name\": \"checkout\"}}}\n",
+      "stderr": ""
+    },
+    {
+      "actor": "bruno-new-session",
+      "args": [
+        "edit",
+        "2",
+        "--body-file",
+        "<sandbox>/decision.md",
+        "--if-revision",
+        "1-8293426162f31151b081d8c0b4a04c650b312210814038e0f93d8993594a3b9b"
+      ],
+      "exit_code": 0,
+      "stdout": "[checkout / 77e3603d-946c-4287-8c8d-f4678bea77ce #2] Escolher o provedor de e-mail antes dos envios.\n<sandbox>/data/notes/projects/77e3603d-946c-4287-8c8d-f4678bea77ce/002.md\n",
+      "stderr": ""
+    },
+    {
+      "actor": "stale-agent",
+      "args": [
+        "edit",
+        "2",
+        "--body-file",
+        "<sandbox>/decision.md",
+        "--if-revision",
+        "1-8293426162f31151b081d8c0b4a04c650b312210814038e0f93d8993594a3b9b"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "notes: conflito na nota 2: revisão alterada; leia novamente com read --json; verifique os caminhos e permissões quando aplicável\n"
+    },
+    {
+      "actor": "agent",
+      "args": [
+        "search",
+        "DECISÃO",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"schema_version\": 1, \"notes\": [{\"schema_version\": 1, \"id\": 2, \"title\": \"Escolher o provedor de e-mail antes dos envios.\", \"author\": \"codex\", \"to\": \"bruno\", \"status\": \"active\", \"created_at\": \"2026-10-23T04:22:08.341704Z\", \"updated_at\": \"2026-10-23T04:22:08.539292Z\", \"revision\": \"2-f7d541cf8d7cb6b91d6999ff3c7477fc00336726e35f8460e5651eb87618bcd8\", \"revision_number\": 2, \"body\": \"Decisão: usar o provedor escolhido no piloto.\\n\", \"path\": \"<sandbox>/data/notes/projects/77e3603d-946c-4287-8c8d-f4678bea77ce/002.md\", \"scope\": {\"kind\": \"project\", \"id\": \"77e3603d-946c-4287-8c8d-f4678bea77ce\", \"name\": \"checkout\"}}], \"errors\": []}\n",
+      "stderr": ""
+    },
+    {
+      "actor": "bruno-new-session",
+      "args": [
+        "archive",
+        "2"
+      ],
+      "exit_code": 0,
+      "stdout": "[checkout / 77e3603d-946c-4287-8c8d-f4678bea77ce #2] Escolher o provedor de e-mail antes dos envios.\n<sandbox>/data/notes/projects/77e3603d-946c-4287-8c8d-f4678bea77ce/002.md\n",
+      "stderr": ""
+    },
+    {
+      "actor": "bruno-new-session",
+      "args": [
+        "archive",
+        "2"
+      ],
+      "exit_code": 0,
+      "stdout": "[checkout / 77e3603d-946c-4287-8c8d-f4678bea77ce #2] Escolher o provedor de e-mail antes dos envios.\n<sandbox>/data/notes/projects/77e3603d-946c-4287-8c8d-f4678bea77ce/002.md\n",
+      "stderr": ""
+    },
+    {
+      "actor": "bruno-new-session",
+      "args": [
+        "context",
+        "--to",
+        "bruno",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"schema_version\": 1, \"notes\": [], \"omitted\": [], \"limit\": 12000, \"used_characters\": 0, \"errors\": []}\n",
+      "stderr": ""
+    },
+    {
+      "actor": "bruno-new-session",
+      "args": [
+        "list",
+        "--archived",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"schema_version\": 1, \"notes\": [{\"schema_version\": 1, \"id\": 2, \"title\": \"Escolher o provedor de e-mail antes dos envios.\", \"author\": \"codex\", \"to\": \"bruno\", \"status\": \"archived\", \"created_at\": \"2026-10-23T04:22:08.341704Z\", \"updated_at\": \"2026-10-23T04:22:08.753728Z\", \"revision\": \"3-45a1d12f7971ff613ea3d283ebda41d036c4030ba420289085ac3854c6dc7c42\", \"revision_number\": 3, \"body\": \"Decisão: usar o provedor escolhido no piloto.\\n\", \"path\": \"<sandbox>/data/notes/projects/77e3603d-946c-4287-8c8d-f4678bea77ce/002.md\", \"scope\": {\"kind\": \"project\", \"id\": \"77e3603d-946c-4287-8c8d-f4678bea77ce\", \"name\": \"checkout\"}}], \"errors\": []}\n",
+      "stderr": ""
+    },
+    {
+      "actor": "bruno-new-session",
+      "args": [
+        "read",
+        "2",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"schema_version\": 1, \"note\": {\"schema_version\": 1, \"id\": 2, \"title\": \"Escolher o provedor de e-mail antes dos envios.\", \"author\": \"codex\", \"to\": \"bruno\", \"status\": \"archived\", \"created_at\": \"2026-10-23T04:22:08.341704Z\", \"updated_at\": \"2026-10-23T04:22:08.753728Z\", \"revision\": \"3-45a1d12f7971ff613ea3d283ebda41d036c4030ba420289085ac3854c6dc7c42\", \"revision_number\": 3, \"body\": \"Decisão: usar o provedor escolhido no piloto.\\n\", \"path\": \"<sandbox>/data/notes/projects/77e3603d-946c-4287-8c8d-f4678bea77ce/002.md\", \"scope\": {\"kind\": \"project\", \"id\": \"77e3603d-946c-4287-8c8d-f4678bea77ce\", \"name\": \"checkout\"}}}\n",
+      "stderr": ""
+    }
+  ]
+}

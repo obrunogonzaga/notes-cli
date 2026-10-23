@@ -1,2 +1,4 @@
 include PRD.md
 recursive-include tests *.py
+recursive-include scripts *.py
+recursive-include docs *.md *.json

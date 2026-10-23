@@ -99,9 +99,24 @@ def read_note(path):
         raise NotesError(f"{path}: {exc}; corrija o arquivo Markdown") from exc
 
 
+def note_paths(scope):
+    try:
+        return sorted(path for path in scope.directory.iterdir() if path.suffix == ".md")
+    except FileNotFoundError:
+        return []
+    except OSError as exc:
+        raise NotesError(
+            f"{scope.directory}: não foi possível listar: {exc}; verifique pasta e permissões"
+        ) from exc
+
+
 def scan(scope):
     notes, errors, seen = [], [], {}
-    for path in sorted(scope.directory.glob("*.md")):
+    try:
+        paths = note_paths(scope)
+    except NotesError as exc:
+        return [], [str(exc)]
+    for path in paths:
         try:
             note = read_note(path)
             identifier = note.meta["id"]
@@ -142,7 +157,7 @@ def add(scope, body, author, recipient):
         notes, _ = scan(scope)
         used = [note.meta["id"] for note in notes]
         # Reserve filenames even if their YAML is invalid.
-        for path in scope.directory.glob("*.md"):
+        for path in note_paths(scope):
             match = re.match(r"(\d+)(?:-|\.)", path.name)
             if match:
                 used.append(int(match.group(1)))
