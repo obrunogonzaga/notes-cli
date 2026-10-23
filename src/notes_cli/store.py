@@ -182,3 +182,25 @@ def archive(scope, identifier):
             note.meta, status="archived", updated_at=now(), revision=note.meta["revision"] + 1
         )
         return save(note.path, meta, note.body)
+
+
+def edit(scope, identifier, body=None, expected=None, proposed=None):
+    """Apply a body replacement or a validated interactive proposal under the scope lock."""
+    with lock(scope.lock_path):
+        current = get(scope, identifier)
+        if expected is not None and expected != current.revision:
+            raise NotesError(
+                f"conflito na nota {identifier}: revisão alterada; leia novamente com read --json"
+            )
+        meta = dict(current.meta)
+        if proposed is not None:
+            for field in ("id", "created_at", "schema_version", "revision", "updated_at"):
+                if proposed.meta[field] != current.meta[field]:
+                    raise NotesError(f"metadado imutável alterado: {field}")
+            meta.update(proposed.meta)
+            body = proposed.body
+        validate(meta, body)
+        if meta == current.meta and body == current.body:
+            return current
+        meta.update(updated_at=now(), revision=current.meta["revision"] + 1)
+        return save(current.path, meta, body)
