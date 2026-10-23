@@ -1,4 +1,6 @@
-// Apenas infraestrutura. As rotas de negócio /v1 serão entregues em #9–#11/#14.
+import { authenticate } from './auth';
+
+// Autenticação da superfície /v1; rotas de negócio ficam para #10–#11/#14.
 export default {
   async fetch(request, env): Promise<Response> {
     const requestId = crypto.randomUUID();
@@ -13,7 +15,22 @@ export default {
         { status, headers: { ...headers, ...extraHeaders } },
       );
 
-    if (new URL(request.url).pathname !== '/healthz') {
+    const unavailable = () => reply(503, {
+      error: { code: 'service_unavailable', message: 'Serviço indisponível.', retryable: true },
+    }, { 'Retry-After': '1' });
+    const path = new URL(request.url).pathname;
+    if (path === '/v1' || path.startsWith('/v1/')) {
+      try {
+        const auth = await authenticate(request, env.DB);
+        if (!auth) return reply(401, {
+          error: { code: 'unauthorized', message: 'Credencial ausente ou inválida.', retryable: false },
+        }, { 'WWW-Authenticate': 'Bearer' });
+        // #10 deve passar auth aos handlers, sem reconstruí-lo a partir do corpo.
+      } catch {
+        return unavailable();
+      }
+    }
+    if (path !== '/healthz') {
       return reply(404, {
         error: { code: 'not_found', message: 'Rota não encontrada.', retryable: false },
       });
@@ -32,8 +49,6 @@ export default {
     } catch {
       // Não expor SQL, stack, dados ou metadados do binding.
     }
-    return reply(503, {
-      error: { code: 'service_unavailable', message: 'Serviço indisponível.', retryable: true },
-    });
+    return unavailable();
   },
 } satisfies ExportedHandler<Env>;

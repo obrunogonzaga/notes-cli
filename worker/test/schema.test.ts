@@ -189,7 +189,7 @@ it('serves a minimal readiness probe and leaves business routes unavailable', as
   expect(unsupported.headers.get('Allow')).toBe('GET');
   await unsupported.text();
   const unknown = await exports.default.fetch('http://localhost/v1/scopes/global/notes');
-  expect(unknown.status).toBe(404);
+  expect(unknown.status).toBe(401);
   await unknown.text();
 });
 
