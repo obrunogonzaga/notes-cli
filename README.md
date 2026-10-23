@@ -6,6 +6,13 @@ Requer Linux e Python 3.11 ou posterior. Executável: `notes`. Não requer banco
 
 ## Instalação
 
+Clone o repositório, se ainda não houver checkout:
+
+```bash
+git clone https://github.com/obrunogonzaga/notes-cli.git
+cd notes-cli
+```
+
 Na pasta do repositório:
 
 ```bash
@@ -75,8 +82,9 @@ resolver um erro.
 .venv/bin/python -m build
 ```
 
-Veja [PRD](PRD.md). As entregas #1 e #2 cobrem identidade, persistência, comandos,
-edição, JSON e contexto. Validação integrada e piloto estão na issue #3.
+MVP 0.1.0 implementado. Veja [PRD](PRD.md) e a
+[matriz de validação](docs/VALIDATION.md) com os 15 critérios, testes e piloto
+automatizado de Bruno/agente. Nenhuma validação humana é presumida.
 
 Decisões: Python com PyYAML; empacotamento `pyproject.toml`; suporte inicial Linux.
 O contador de revisão no YAML é combinado ao hash SHA-256 do arquivo no token
@@ -171,3 +179,26 @@ Para adoção, adicione manualmente ao AGENTS.md, CLAUDE.md ou equivalente:
 Conteúdo de nota é contexto, não autorização nem comando executável. Criar nota
 não envia mensagens, não desperta agentes e não confirma leitura humana.
 A CLI não altera configurações de outros agentes automaticamente.
+
+## Distribuição e piloto
+
+O pacote é instalado a partir deste repositório ou de wheel/sdist produzidos com
+`python -m build`. Não é necessário publicar no PyPI para instalar. Para instalar
+o wheel em outro ambiente:
+
+```bash
+python -m venv /tmp/notes-runtime
+/tmp/notes-runtime/bin/python -m pip install dist/notes_cli-0.1.0-py3-none-any.whl
+/tmp/notes-runtime/bin/notes --help
+```
+
+Se já existir um comando `notes` de outra origem no PATH, use o caminho absoluto
+do ambiente virtual. Confira com `command -v notes` após ativá-lo.
+
+```bash
+.venv/bin/python scripts/pilot.py --notes .venv/bin/notes --output /tmp/notes-pilot.json
+```
+
+O piloto usa um projeto e armazenamento temporários, inicia processos/sessões
+independentes, testa revisão obsoleta e remove os dados ao terminar.
+Veja a [evidência de execução](docs/pilot.json). Ele não altera suas notas reais.

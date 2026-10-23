@@ -1,9 +1,9 @@
 # PRD — notes-cli
 
-Status: proposta inicial, sem implementação.  
+Status: MVP 0.1.0 implementado; validação em [docs/VALIDATION.md](docs/VALIDATION.md).
 Data: 23 de outubro de 2026.  
 Responsável pelo produto: Bruno Gonzaga.  
-Nome do projeto: `notes-cli`. Comando proposto: `notes`.
+Nome do projeto: `notes-cli`. Comando: `notes`.
 
 ## 1. Problema
 
@@ -53,7 +53,7 @@ As notas cobrem três usos principais: contexto permanente, recados para agentes
 
 ## 5. Experiência proposta
 
-Os comandos abaixo descrevem a interface desejada e ainda não estão disponíveis.
+Os comandos abaixo descrevem a interface do MVP implementado.
 
 ```bash
 # Registrar o projeto atual
@@ -310,21 +310,27 @@ A criação de notas longas deve cobrir argumento, arquivo redirecionado, pipe, 
 
 Concorrência deve ser verificada com processos simultâneos reais, incluindo criação de notas e edição com revisão desatualizada. A usabilidade deve ser conferida manualmente no terminal e com um agente seguindo as instruções documentadas.
 
-Neste estágio, a entrega é somente a documentação do produto; não há implementação a testar.
+A implementação e os testes estão no repositório. A matriz de evidências dos 15 critérios e o piloto automatizado estão em [docs/VALIDATION.md](docs/VALIDATION.md). O piloto não representa validação humana de Bruno.
 
 ## 12. Etapas de entrega
 
 1. Definir a linguagem, o empacotamento e o nome final do executável.
 2. Implementar identidade, armazenamento Markdown e comandos essenciais.
 3. Implementar contexto, saída JSON e edição condicional para agentes.
-4. Validar concorrência e realizar um uso piloto com Bruno em um projeto real.
+4. Validar concorrência e realizar um piloto automatizado dos fluxos de Bruno e agente em um projeto Git representativo, conforme a instrução de execução.
 5. Avaliar TUI e integração com Maestri a partir do uso observado.
 
 ## 13. Decisões em aberto
 
-- Linguagem e mecanismo de instalação/distribuição.
-- Nome definitivo do produto e disponibilidade do comando `notes`.
-- Valor padrão do limite de contexto e unidade de contagem.
+Decisões do MVP implementado:
+
+- Python 3.11+ em Linux; PyYAML para front matter; instalação por ambiente virtual, wheel ou sdist.
+- Produto/pacote `notes-cli`; executável `notes`. Ambientes virtuais isolam comandos homônimos.
+- Contexto limitado por padrão a 12.000 caracteres Unicode dos blocos de notas completos; `--limit` configura o orçamento, excluindo avisos de omissão e envelope JSON.
+- Revisão condicional opaca com contador e SHA-256 do arquivo; `revision_number` expõe o contador no JSON.
+- Piloto automatizado com sessões independentes, conforme instrução de execução, sem presumir participação humana.
+
+Permanecem fora do MVP:
 - Necessidade futura de restauração por comando, tags e histórico de alterações.
 - Estratégia de sincronização entre máquinas, se necessária após o piloto.
 - Forma de integração visual com Maestri e outros ADEs.
