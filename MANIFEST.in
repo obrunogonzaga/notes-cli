@@ -1,0 +1,2 @@
+include PRD.md
+recursive-include tests *.py
