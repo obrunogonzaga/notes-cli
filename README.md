@@ -1,7 +1,7 @@
 # notes-cli
 
 > A versão disponível abaixo é a v0.1 local em Python. O [PRD vigente](PRD.md)
-> define o próximo MVP remoto (CLI Go + Worker + D1), ainda não implementado.
+> define o próximo MVP remoto (CLI Go + Worker + D1). A [infraestrutura local Worker/D1](docs/WORKER-DEVELOPMENT.md) já está disponível para desenvolvimento; API funcional e CLI Go seguem pendentes.
 
 Acompanhamento: [changelog](changelog.md) e [milestones e issues](docs/ROADMAP.md).
 O [contrato remoto v1](docs/REMOTE-CONTRACT.md) documenta HTTP/JSON, [configuração e incompatibilidades](docs/REMOTE-SETUP.md), [D1](docs/D1-SCHEMA.md) e [importação](docs/REMOTE-IMPORT.md); os comandos remotos desses documentos ainda não estão disponíveis. Os exemplos a seguir são da versão Python local.

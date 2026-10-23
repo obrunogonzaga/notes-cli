@@ -1,6 +1,6 @@
 # Configuração e operação do MVP remoto
 
-Parte normativa do [contrato v1](REMOTE-CONTRACT.md), entrega de [#7](https://github.com/obrunogonzaga/notes-cli/issues/7). Tudo aqui descreve a futura CLI Go/Worker. Os comandos remotos **ainda não estão disponíveis**; README e testes existentes descrevem Python local.
+Parte normativa do [contrato v1](REMOTE-CONTRACT.md), entrega de [#7](https://github.com/obrunogonzaga/notes-cli/issues/7). A CLI Go e as rotas de negócio remotas **ainda não estão disponíveis**. A infraestrutura local Worker/D1 da #8 já pode ser executada conforme o [guia de desenvolvimento](WORKER-DEVELOPMENT.md); README e testes Python continuam descrevendo a versão local.
 
 ## 1. Configuração da CLI Go
 
@@ -44,7 +44,7 @@ O canal privado precisa entregar o token diretamente como arquivo/stdin protegid
 
 ## 2. Configuração do Worker e D1
 
-A ser criada em M2, sem provisionamento nesta issue:
+Base local implementada na #8 em `worker/`, sem provisionamento Cloudflare. [Preparação, migrações, testes isolados e resultados reais](WORKER-DEVELOPMENT.md). Autenticação e rotas funcionais da tabela continuam sendo especificação para as próximas issues de M2:
 
 | Configuração | Decisão |
 | --- | --- |

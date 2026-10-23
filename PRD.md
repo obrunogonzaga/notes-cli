@@ -1,6 +1,6 @@
 # PRD — notes-cli: memória compartilhada entre Bruno e agentes
 
-Status: MVP remoto e contrato HTTP/JSON v1 definidos; implementação remota pendente. A versão disponível continua sendo a v0.1 local em Python.
+Status: MVP remoto e contrato HTTP/JSON v1 definidos; infraestrutura local Worker/D1 da [#8](docs/WORKER-DEVELOPMENT.md) implementada. API funcional e CLI Go pendentes. A versão disponível continua sendo a v0.1 local em Python.
 Data: 23 de outubro de 2026.  
 Responsável pelo produto: Bruno Gonzaga.  
 Produto: `notes-cli`. Comando: `notes`.

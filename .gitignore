@@ -5,3 +5,12 @@ __pycache__/
 .ruff_cache/
 build/
 dist/
+
+# Worker: dependências, tipos gerados, estado local e configuração privada
+worker/node_modules/
+worker/.wrangler/
+worker/worker-configuration.d.ts
+worker/coverage/
+worker/.dev.vars*
+worker/.env*
+worker/wrangler.*.local.*

@@ -330,7 +330,7 @@ Esta matriz é revisão de **especificação**, não evidência de funcionalidad
 | 13 | [Manifesto, identidade e mapeamento](REMOTE-IMPORT.md). | M4: amostra Python, hashes antes/depois, repetição, origem divergente e IDs remapeados. |
 | 14 | Recuperação textual sem LLM; seção 5 e duas máquinas. | M5: agente real recupera decisão Go e cita escopo/ID/revisão; evidência distinta de simulação. |
 
-Decisões de contrato para M2/M3 estão fechadas. Permanecem trabalhos de implementação e operação: criar Worker/migrações, CLI Go, importador, distribuição e piloto; escolher a URL real e provisionar ambientes/credenciais em M2/M5. Não há credenciais, recursos Cloudflare ou evidência de piloto criados por esta especificação.
+Decisões de contrato para M2/M3 estão fechadas. Permanecem trabalhos de implementação e operação: implementar autenticação/rotas sobre a [infraestrutura Worker/migrações da #8](WORKER-DEVELOPMENT.md), CLI Go, importador, distribuição e piloto; escolher a URL real e provisionar ambientes/credenciais em M2/M5. Não há credenciais, recursos Cloudflare ou evidência de piloto criados por esta especificação.
 
 ## 9. Revisão de especificação da issue #7
 

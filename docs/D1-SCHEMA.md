@@ -1,6 +1,6 @@
 # Esquema D1 e invariantes do MVP
 
-Parte normativa do [contrato v1](REMOTE-CONTRACT.md), [#7](https://github.com/obrunogonzaga/notes-cli/issues/7). SQL abaixo é **especificação**, não migração aplicada. M2/#8 criará os arquivos de migração e os testes contra D1. Não há API/servidor novo nesta entrega.
+Parte normativa do [contrato v1](REMOTE-CONTRACT.md), [#7](https://github.com/obrunogonzaga/notes-cli/issues/7). O esquema abaixo de M1 está implementado nas [migrações](../worker/migrations/) da #8, com [verificações no D1 local e instruções de execução](WORKER-DEVELOPMENT.md). As estratégias de API/concorrência da seção 2 continuam como requisitos para #9–#11/#14; esta base não implementa as rotas de negócio.
 
 ## 1. Esquema lógico inicial
 
@@ -107,7 +107,7 @@ INSERT INTO scopes(id, kind, name, created_at, created_by)
 VALUES ('global', 'global', 'global', '2026-10-23T00:00:00.000Z', NULL);
 ```
 
-Instante do seed acima é ilustrativo; migração usa sua data real. Global não depende de identidade provisionada. `next_note_id = 9007199254740992` é sentinela de esgotamento, jamais exposta como ID. Se contador de IDs/revisões esgotar, devolver 422 `capacity_exceeded`, sem overflow/reutilização. Revisão número 1 em criação/importação. Tokens de revisão são r_UUID v4 novos por mudança efetiva; limite interno de revisão não é formato de cliente.
+O seed usa a data fixa da migração `0002_seed_global.sql`, 23/10/2026; reexecução pelo tracking de migrações não altera esse instante. Global não depende de identidade provisionada. `next_note_id = 9007199254740992` é sentinela de esgotamento, jamais exposta como ID. Se contador de IDs/revisões esgotar, devolver 422 `capacity_exceeded`, sem overflow/reutilização. Revisão número 1 em criação/importação. Tokens de revisão são r_UUID v4 novos por mudança efetiva; limite interno de revisão não é formato de cliente.
 
 `scopes` representa projetos + global, expostos como tipos separados pela API. Nomes de projeto não são únicos. Não registrar caminhos de máquina. DTO de nota traduz to_recipient para to, busca identidades para created_by/updated_by e junta imported_notes para origin. Datas de origem preservam strings do Python; não são ordenadas como datas de servidor. Mapeamento, origem e recibos permanecem mesmo após edição, arquivamento ou revogação de credencial.
 
@@ -138,7 +138,7 @@ Não retornar campos `meta` de D1, SQL ou stack ao cliente. Traduzir conflito de
 
 ## 3. Validação exigida em M2
 
-- Executar migração em D1 local/ambiente isolado, conferir FKs, triggers, índices e seed global. SQL verificado em SQLite na especificação não substitui D1.
+- Concluído na #8: migrações no D1 local isolado, atualização/reexecução, FKs, triggers, índices, seed global e rollback de batches. [Evidências e limites](WORKER-DEVELOPMENT.md#resultados-e-limites-registrados). Testes funcionais abaixo continuam pendentes; D1 local não substitui validação remota.
 - Disparar adds simultâneos distintos e com mesma chave, resposta perdida, mesma chave em outro scope e credencial rotacionada. Verificar uma nota por recibo e sequência sem reutilização.
 - Forçar falha entre nota/recibo e nota/origem: rollback integral, inclusive contador/projeto. Corrida com revogação não pode gravar depois de perder a condição de auth.
 - Duas revisões concorrentes, no-op, archive repetido, token inválido, campos Unicode e consulta com %, _, aspas, acentos e emoji. Checar limites exatos e acima do limite.
