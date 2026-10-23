@@ -1,0 +1,26 @@
+{
+  "name": "notes-cli-worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0 <27"
+  },
+  "scripts": {
+    "dev": "wrangler dev --local --ip 127.0.0.1 --persist-to .wrangler/state/dev",
+    "db:migrate": "wrangler d1 migrations apply notes-local --local --persist-to .wrangler/state/dev",
+    "db:list": "wrangler d1 migrations list notes-local --local --persist-to .wrangler/state/dev",
+    "types": "wrangler types",
+    "typecheck": "npm run types && tsc --noEmit && tsc -p test/tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:local": "node --test scripts/local.test.mjs",
+    "check": "npm run typecheck && npm test && npm run test:local"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "1.4.7",
+    "@types/node": "24.19.2",
+    "typescript": "7.0.2",
+    "vitest": "5.0.5",
+    "wrangler": "4.152.0"
+  }
+}

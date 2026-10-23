@@ -2,7 +2,7 @@
 
 O [PRD](../PRD.md) define o escopo. O [GitHub](https://github.com/obrunogonzaga/notes-cli/issues) registra andamento, responsáveis e discussão; o [changelog](../changelog.md) registra mudanças realizadas.
 
-Planejamento criado em 23/10/2026. O MVP remoto ainda não foi implementado; a versão disponível continua sendo a v0.1 local em Python. Nenhum prazo foi assumido.
+Planejamento criado em 23/10/2026. A infraestrutura local Worker/D1 da #8 foi implementada; a API funcional e a CLI Go continuam pendentes. A versão de uso disponível continua sendo a v0.1 local em Python. Nenhum prazo foi assumido.
 
 ## MVP remoto
 
@@ -15,6 +15,8 @@ Planejamento criado em 23/10/2026. O MVP remoto ainda não foi implementado; a v
 | [M5 — Piloto remoto e aceite do MVP](https://github.com/obrunogonzaga/notes-cli/milestone/5) | [#16](https://github.com/obrunogonzaga/notes-cli/issues/16) | M1–M4. |
 
 Contrato de M1: [HTTP/JSON e matriz dos 14 critérios](REMOTE-CONTRACT.md), [configuração/credenciais/compatibilidade](REMOTE-SETUP.md), [D1](D1-SCHEMA.md) e [importação](REMOTE-IMPORT.md). A entrega de #7 é especificação; não aplica migrações, cria API/CLI remotas ou valida o piloto.
+
+A #8 entrega [migrações, base Worker e testes isolados](WORKER-DEVELOPMENT.md), sem recursos Cloudflare ou deploy. M2 permanece em andamento: autenticação (#9), projetos/notas (#10) e busca/contexto (#11) não foram antecipados.
 
 ### Entregas
 

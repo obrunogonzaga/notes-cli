@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "notes-local",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-23",
+  "workers_dev": false,
+  "preview_urls": false,
+  "send_metrics": false,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "notes-local",
+      // Placeholder local; não identifica um recurso Cloudflare real.
+      "database_id": "00000000-0000-0000-0000-000000000008",
+      "remote": false,
+      "migrations_dir": "migrations"
+    }
+  ]
+}

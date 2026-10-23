@@ -13,6 +13,9 @@ Registro de mudanças realizadas no projeto. Funcionalidades planejadas ficam no
 
 ### Adicionado
 
+- Infraestrutura local da [#8](https://github.com/obrunogonzaga/notes-cli/issues/8) em `worker/`: Worker TypeScript com sonda `/healthz`, configuração local sem credenciais, dependências fixadas e duas migrações D1 de M1 (seis tabelas, FKs, índices, triggers de sequência e seed global). Não implementa autenticação, rotas de notas, busca/contexto ou importação.
+- [Ambiente reproduzível e evidências](docs/WORKER-DEVELOPMENT.md): TypeScript, 13 testes Workers e 1 teste Wrangler aprovados, incluindo banco novo, atualização com dados existentes, reexecução e rollback de nota/contador/projeto; scripts locais de migração e Worker/D1 também verificados. Job CI Worker separado adicionado para validação hospedada; D1 remoto permanece pendente. Python preservado, com lint e 42 testes aprovados em ambiente isolado. Nenhum recurso Cloudflare, deploy ou piloto remoto criado.
+
 - [Contrato HTTP/JSON v1 do MVP remoto](docs/REMOTE-CONTRACT.md) para [#7](https://github.com/obrunogonzaga/notes-cli/issues/7): endpoints, envelopes/erros/limites, Unicode, revisão condicional, idempotência permanente e retries, com matriz de cobertura dos 14 critérios do PRD.
 - Especificações de [configuração e provisionamento/revogação](docs/REMOTE-SETUP.md), [esquema/transações D1](docs/D1-SCHEMA.md) e [importação explícita com origem, colisões e mapeamento](docs/REMOTE-IMPORT.md), incluindo fluxo entre duas máquinas e incompatibilidades Python. São documentação para M2–M4, sem implementação, provisionamento ou piloto remoto. [Revisão da especificação](docs/REMOTE-CONTRACT.md#9-revisão-de-especificação-da-issue-7): exemplos JSON, links/âncoras, orçamento de contexto e esquema/invariantes SQL verificados localmente; integração D1 permanece para M2.
 
