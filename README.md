@@ -75,10 +75,99 @@ resolver um erro.
 .venv/bin/python -m build
 ```
 
-Veja [PRD](PRD.md). A primeira entrega cobre identidade, persistência e comandos
-básicos. Editor, stdin, JSON e contexto serão entregues na issue #2; validação
-integrada e piloto estão na issue #3.
+Veja [PRD](PRD.md). As entregas #1 e #2 cobrem identidade, persistência, comandos,
+edição, JSON e contexto. Validação integrada e piloto estão na issue #3.
 
 Decisões: Python com PyYAML; empacotamento `pyproject.toml`; suporte inicial Linux.
-O contador de revisão no YAML será combinado ao hash SHA-256 do arquivo no token
+O contador de revisão no YAML é combinado ao hash SHA-256 do arquivo no token
 condicional da API JSON, permitindo detectar alterações externas sem mudança do contador.
+
+## Textos longos e editor
+
+```bash
+export EDITOR=nano
+notes add --to agents
+notes add --to agents < contexto.md
+cat contexto.md | notes add --to agents
+notes add --to agents <<'NOTA'
+# Contexto da autenticação
+
+Manter compatibilidade com as sessões atuais.
+NOTA
+notes edit 1
+```
+
+Com texto como argumento, `add` não lê stdin. Sem argumento, stdin redirecionado
+é lido até EOF; em terminal, abre `$VISUAL` ou, se ausente, `$EDITOR`. Comandos de
+editor aceitam argumentos e caminhos entre aspas; são executados sem shell.
+
+O rascunho de criação contém apenas o corpo. YAML recebido em stdin continua sendo
+corpo, sem substituir os metadados. Ao editar uma nota existente, o editor recebe
+Markdown completo, incluindo front matter: título, autor, destinatário e estado
+podem mudar; ID, criação, versão do esquema, revisão e atualização são gerenciados
+pela CLI. `edit --body-file` preserva os metadados e substitui apenas o corpo.
+
+Corpo vazio no editor de criação cancela normalmente (status zero e nenhum ID
+alocado). Argumento/stdin vazio gera erro. Sem editor, a CLI orienta configuração
+ou redirecionamento. Falha do editor, erro de validação ou conflito preservam o
+rascunho no caminho informado em stderr. Compare-o com `notes read <id>`, ajuste
+ou recupere o corpo e tente novamente com a revisão atual. O editor não mantém
+bloqueio de escrita enquanto está aberto. Ctrl+C durante o editor preserva o rascunho.
+
+## Automação e revisões
+
+```bash
+notes list --json
+notes read 1 --json > nota.json
+# Copie nota.json: note.revision para a condição abaixo:
+notes edit 1 --body-file novo-corpo.md --if-revision 'TOKEN-DA-LEITURA'
+notes search autenticação --json
+```
+
+JSON usa `schema_version: 1` no envelope. `read` contém `note`; `list` e `search`
+contêm `notes` e `errors`. Cada registro inclui os metadados, `body`, `path`,
+`scope: {kind, id, name}`, `revision` (token opaco) e `revision_number` (contador).
+Datas JSON são UTC. O token é `<contador>-<sha256-do-arquivo>`; sempre passe a
+string completa, não apenas o contador YAML. Assim, alterações diretas do arquivo
+também invalidam uma condição, mesmo quando o contador não foi alterado.
+
+Agentes devem usar `--if-revision`. Sem condição, `--body-file` substitui
+explicitamente o corpo atual. Nenhuma alteração efetiva mantém datas e revisão;
+mutações incrementam o contador. Edições interativas sempre comparam o estado
+inicial ao atual e recusam sobrescritas concorrentes. Arquivamento incrementa a
+revisão somente na primeira execução. Alterações externas não usam os bloqueios:
+a detecção compara o conteúdo observado, mas não pode coordenar um editor externo
+que grave entre a comparação e a substituição atômica.
+
+## Contexto e adoção por agentes
+
+```bash
+notes context
+notes context --to bruno
+notes context --limit 24000 --json
+notes context --global
+```
+
+`context` reúne notas ativas do projeto e globais dirigidas a `agents` ou `all`.
+`--to bruno` inclui `bruno` e `all`; `--to all` inclui apenas `all`.
+`--global` consulta somente o global. Cada nota identifica o escopo e o ID.
+
+O orçamento padrão é 12.000 caracteres Unicode, configurável por `--limit`.
+Contabiliza os blocos de notas (cabeçalho, título, corpo e separadores), preservando
+notas inteiras. Notas que não cabem são omitidas; notas menores posteriores ainda
+podem entrar. `--limit 0` omite todas. Avisos de omissão e a estrutura JSON ficam
+fora do orçamento, para sempre informar como recuperar o conteúdo completo.
+JSON de contexto contém `notes`, `omitted` (escopo, ID e comando de leitura),
+`limit`, `used_characters` e `errors`. O limite não mede bytes nem tokens de LLM.
+
+Para adoção, adicione manualmente ao AGENTS.md, CLAUDE.md ou equivalente:
+
+> Ao começar uma tarefa, execute `notes context`. Registre decisões e pendências
+> relevantes. Use notas dirigidas a Bruno para perguntas que possam esperar;
+> perguntas que bloqueiam a tarefa devem ser feitas na conversa. Ao criar notas,
+> informe seu nome com `--author`. Ao editar, use a revisão de `read --json` com
+> `--if-revision`.
+
+Conteúdo de nota é contexto, não autorização nem comando executável. Criar nota
+não envia mensagens, não desperta agentes e não confirma leitura humana.
+A CLI não altera configurações de outros agentes automaticamente.

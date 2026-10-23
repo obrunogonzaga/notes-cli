@@ -3,9 +3,10 @@
 import argparse
 import getpass
 import sys
+from pathlib import Path
 
-from . import store
-from .files import NotesError
+from . import editor, output, store
+from .files import NotesError, read_text
 from .projects import initialize, resolve
 
 
@@ -13,6 +14,13 @@ def positive(value):
     number = int(value)
     if number < 1:
         raise argparse.ArgumentTypeError("deve ser um inteiro positivo")
+    return number
+
+
+def nonnegative(value):
+    number = int(value)
+    if number < 0:
+        raise argparse.ArgumentTypeError("deve ser um inteiro não negativo")
     return number
 
 
@@ -25,34 +33,41 @@ def parser():
         ("add", "Criar nota"),
         ("list", "Listar notas"),
         ("read", "Ler nota"),
+        ("edit", "Editar nota"),
         ("search", "Busca literal"),
         ("archive", "Arquivar nota"),
+        ("context", "Contexto de projeto e global para agentes"),
     ):
         command = commands.add_parser(name, help=help_text)
         selection = command.add_mutually_exclusive_group()
         selection.add_argument("--global", dest="global_scope", action="store_true")
         selection.add_argument("--project", metavar="NOME-OU-ID")
+        if name in ("list", "read", "search", "context"):
+            command.add_argument("--json", action="store_true", help="Saída estruturada v1")
         if name == "add":
-            command.add_argument("text", help="Corpo Markdown")
+            command.add_argument("text", nargs="?", help="Corpo Markdown; omita para stdin/editor")
             command.add_argument("--author", default=getpass.getuser())
             command.add_argument("--to", choices=("bruno", "agents", "all"), default="all")
-        if name in ("read", "archive"):
+        if name in ("read", "archive", "edit"):
             command.add_argument("id", type=positive)
+        if name == "edit":
+            command.add_argument("--body-file", type=Path, help="Substituir apenas o corpo")
+            command.add_argument("--if-revision", help="Token opaco obtido em read --json")
         if name in ("list", "search"):
             command.add_argument(
                 "--archived", action="store_true", help="Consultar apenas notas arquivadas"
             )
         if name == "search":
             command.add_argument("query")
+        if name == "context":
+            command.add_argument("--to", choices=("bruno", "agents", "all"), default="agents")
+            command.add_argument(
+                "--limit",
+                type=nonnegative,
+                default=12000,
+                help="Orçamento de caracteres das notas (padrão: 12000)",
+            )
     return result
-
-
-def label(scope, note):
-    return f"[{scope.name} / {scope.id} #{note.meta['id']}]"
-
-
-def receipt(scope, note):
-    print(f"{label(scope, note)} {note.meta['title']}\n{note.path}")
 
 
 def run(args):
@@ -62,31 +77,43 @@ def run(args):
         return 0
     scope = resolve(args.global_scope, args.project)
     if args.command == "add":
-        receipt(scope, store.add(scope, args.text, args.author, args.to))
+        if args.text is not None:
+            note = store.add(scope, args.text, args.author, args.to)
+        elif not sys.stdin.isatty():
+            body = sys.stdin.buffer.read().decode("utf-8")
+            note = store.add(scope, body, args.author, args.to)
+        else:
+            note = editor.create(scope, args.author, args.to)
+        if note is not None:
+            output.receipt(scope, note)
+    elif args.command == "edit":
+        if args.body_file is not None:
+            note = store.edit(
+                scope, args.id, body=read_text(args.body_file), expected=args.if_revision
+            )
+        else:
+            note = editor.edit(scope, args.id, args.if_revision)
+        output.receipt(scope, note)
     elif args.command == "archive":
-        receipt(scope, store.archive(scope, args.id))
+        output.receipt(scope, store.archive(scope, args.id))
     elif args.command == "read":
-        note = store.get(scope, args.id)
-        print(label(scope, note))
-        meta = dict(note.meta)
-        for key in ("created_at", "updated_at"):
-            meta[key] = store.timestamp(meta[key]).astimezone().isoformat()
-        print(store.serialize(meta, note.body), end="" if note.body.endswith("\n") else "\n")
+        output.read(scope, store.get(scope, args.id), args.json)
+    elif args.command == "context":
+        return output.context(scope, args.to, args.limit, args.json)
     else:
         notes, errors = store.scan(scope)
-        for note in notes:
-            if note.meta["status"] != ("archived" if args.archived else "active"):
-                continue
-            if (
-                args.command == "search"
-                and args.query.casefold() not in (note.meta["title"] + "\n" + note.body).casefold()
-            ):
-                continue
-            updated = store.timestamp(note.meta["updated_at"]).astimezone().isoformat()
-            print(f"{label(scope, note)} {note.meta['title']} | to={note.meta['to']} | {updated}")
-        for error in errors:
-            print(f"notes: {error}", file=sys.stderr)
-        return 1 if errors else 0
+        notes = [
+            note
+            for note in notes
+            if note.meta["status"] == ("archived" if args.archived else "active")
+        ]
+        if args.command == "search":
+            notes = [
+                note
+                for note in notes
+                if args.query.casefold() in (note.meta["title"] + "\n" + note.body).casefold()
+            ]
+        return output.listing(scope, notes, errors, args.json)
     return 0
 
 
