@@ -1,0 +1,38 @@
+# Changelog
+
+Registro de mudanças realizadas no projeto. Funcionalidades planejadas ficam no [PRD](PRD.md) e nas [milestones e issues](docs/ROADMAP.md).
+
+## Como atualizar
+
+- Registrar cada mudança entregue em “Não lançado”, junto da alteração e com links de issue/PR quando existirem.
+- Usar categorias como Adicionado, Alterado, Corrigido e Removido; descrever o efeito para Bruno e os agentes.
+- Registrar incompatibilidades, instruções de migração e validação relevante quando aplicáveis.
+- Ao publicar uma versão, agrupar os registros com a versão e a data reais. Não tratar fechamento de planejamento como implementação.
+
+## Não lançado
+
+### Adicionado
+
+- [Contrato HTTP/JSON v1 do MVP remoto](docs/REMOTE-CONTRACT.md) para [#7](https://github.com/obrunogonzaga/notes-cli/issues/7): endpoints, envelopes/erros/limites, Unicode, revisão condicional, idempotência permanente e retries, com matriz de cobertura dos 14 critérios do PRD.
+- Especificações de [configuração e provisionamento/revogação](docs/REMOTE-SETUP.md), [esquema/transações D1](docs/D1-SCHEMA.md) e [importação explícita com origem, colisões e mapeamento](docs/REMOTE-IMPORT.md), incluindo fluxo entre duas máquinas e incompatibilidades Python. São documentação para M2–M4, sem implementação, provisionamento ou piloto remoto. [Revisão da especificação](docs/REMOTE-CONTRACT.md#9-revisão-de-especificação-da-issue-7): exemplos JSON, links/âncoras, orçamento de contexto e esquema/invariantes SQL verificados localmente; integração D1 permanece para M2.
+
+- `changelog.md` com convenção de atualização contínua.
+- [Mapa de entregas](docs/ROADMAP.md) com cinco [milestones](https://github.com/obrunogonzaga/notes-cli/milestones), dez issues para o MVP remoto e cinco de evolução posterior, incluindo dependências e critérios de conclusão.
+- [PRD local v0.1](docs/PRD-local-v0.1.md) preservado como referência histórica da implementação Python.
+
+### Alterado
+
+- PRD, README, roadmap e validação histórica apontam para o contrato remoto; decisões antes pendentes de M1 estão registradas, preservando o planejamento e a referência Python.
+
+- [PRD vigente](PRD.md) atualizado para memória compartilhada entre máquinas: CLI Go, Worker TypeScript, D1, credenciais individuais, revisões condicionais, busca textual para RAG e importação explícita. Este registro documenta a definição do escopo; os recursos remotos permanecem pendentes de implementação.
+- README e matriz de validação identificam a versão local disponível e distinguem suas evidências do futuro MVP remoto.
+
+## 0.1.0 — Base local implementada — 2026-10-23
+
+Referência histórica da versão presente no código. Esta entrada não indica publicação de release ou tag no GitHub.
+
+### Adicionado
+
+- CLI Python com identidade persistente de projetos, notas Markdown em projeto/global e gravações coordenadas: [#1](https://github.com/obrunogonzaga/notes-cli/issues/1), [PR #4](https://github.com/obrunogonzaga/notes-cli/pull/4).
+- Edição por editor/arquivo, entrada de textos longos, revisões condicionais, saída JSON e contexto para agentes: [#2](https://github.com/obrunogonzaga/notes-cli/issues/2), [PR #5](https://github.com/obrunogonzaga/notes-cli/pull/5).
+- Validação automatizada, instalação de wheel/sdist e piloto automatizado Bruno/agente: [#3](https://github.com/obrunogonzaga/notes-cli/issues/3), [PR #6](https://github.com/obrunogonzaga/notes-cli/pull/6). Evidências históricas em [docs/VALIDATION.md](docs/VALIDATION.md); não equivalem a um piloto remoto ou validação humana.

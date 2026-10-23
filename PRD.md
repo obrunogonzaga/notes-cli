@@ -1,338 +1,202 @@
-# PRD — notes-cli
+# PRD — notes-cli: memória compartilhada entre Bruno e agentes
 
-Status: MVP 0.1.0 implementado; validação em [docs/VALIDATION.md](docs/VALIDATION.md).
+Status: MVP remoto e contrato HTTP/JSON v1 definidos; implementação remota pendente. A versão disponível continua sendo a v0.1 local em Python.
 Data: 23 de outubro de 2026.  
 Responsável pelo produto: Bruno Gonzaga.  
-Nome do projeto: `notes-cli`. Comando: `notes`.
+Produto: `notes-cli`. Comando: `notes`.
 
-## 1. Problema
+O [PRD local v0.1](docs/PRD-local-v0.1.md) e sua [validação](docs/VALIDATION.md) ficam preservados como referência histórica. As evidências existentes não validam o MVP remoto descrito aqui. O [contrato HTTP/JSON v1](docs/REMOTE-CONTRACT.md) fecha as decisões da etapa 1; [configuração](docs/REMOTE-SETUP.md), [esquema D1](docs/D1-SCHEMA.md) e [importação](docs/REMOTE-IMPORT.md) integram essa especificação.
 
-No Maestri ADE, Bruno e os agentes podem ler e escrever notas compartilhadas. Essa experiência ajuda a manter contexto e trocar recados, mas Bruno quer um mecanismo semelhante disponível pelo terminal e por diferentes ADEs.
+## 1. Problema e objetivo
 
-Conversas isoladas dificultam recuperar decisões e pendências quando uma sessão termina ou quando Bruno troca de agente ou ambiente. É necessário um lugar persistente, simples de consultar e editar, que possa ser usado tanto por uma pessoa quanto por agentes com acesso ao terminal.
+Conversas e arquivos locais isolam decisões, descobertas e pendências em uma sessão ou máquina. Bruno precisa compartilhar conhecimento com agentes que executam em outras máquinas, independentemente do ADE utilizado.
 
-## 2. Objetivo
+O objetivo é oferecer uma memória central consultável e editável por Bruno e seus agentes. A primeira entrega deve permitir registrar uma decisão em uma máquina e recuperá-la em outra, com autoria identificada, contexto estruturado e proteção contra sobrescritas concorrentes.
 
-Criar uma pequena CLI local para registrar, consultar, buscar, editar e arquivar notas compartilhadas entre Bruno e agentes. As notas devem continuar disponíveis independentemente da sessão e do ADE utilizado.
+A direção de produto é um segundo cérebro compartilhado. O MVP entrega notas e recuperação de contexto; não tenta implementar de início um sistema completo de conhecimento, colaboração ou tarefas.
 
-O fluxo principal deve exigir poucos comandos e permitir acesso direto aos arquivos pelo editor preferido de Bruno.
-
-## 3. Usuários e casos de uso
+## 2. Usuários e casos de uso
 
 | Usuário | Necessidade | Exemplo |
 | --- | --- | --- |
-| Bruno | Deixar contexto para os agentes | “Antes de alterar o login, leia docs/auth.md.” |
-| Bruno | Consultar descobertas e pendências | Ver recados deixados pelos agentes ao finalizar uma tarefa. |
-| Agente | Recuperar contexto de outra sessão | Ler decisões e convenções relevantes ao projeto atual. |
-| Agente | Registrar um retorno para Bruno | “Precisamos escolher o provedor de e-mail.” |
-| Bruno e agentes | Preservar uma decisão | Registrar uma escolha e os motivos que a sustentam. |
+| Bruno | Registrar decisões reutilizáveis | “Escolhemos Go para distribuir um binário único.” |
+| Agente remoto | Recuperar contexto do projeto | Consultar decisões antes de alterar a distribuição. |
+| Agente remoto | Registrar descobertas e pendências | Deixar um retorno para Bruno ou para outro agente. |
+| Bruno e agentes | Atualizar conhecimento compartilhado | Corrigir uma nota sem sobrescrever uma edição mais recente. |
 
-As notas cobrem três usos principais: contexto permanente, recados para agentes e retornos para Bruno. Na primeira versão, esses usos não precisam de sistemas de workflow separados.
+## 3. Escopo do MVP remoto
 
-## 4. Escopo do MVP
+- Um único espaço de Bruno, com notas globais e notas por projeto.
+- CLI em Go, API em Cloudflare Worker com TypeScript e persistência em D1.
+- Credencial individual para Bruno e para cada agente, provisionada manualmente, com possibilidade de revogação.
+- Criar, listar, ler, editar, buscar e arquivar notas Markdown.
+- Registrar título, autoria autenticada, destinatário, datas, estado e revisão.
+- Identidade de projeto por UUID em `.notes-project`, compartilhável entre máquinas.
+- Busca textual literal em título e corpo, sem distinguir maiúsculas de minúsculas; sem promessa de equivalência semântica ou de acentos.
+- Recuperação de contexto por projeto e global, com consulta opcional, limite de saída e referências às notas.
+- Saída JSON versionada para agentes e automação.
+- Importação explícita dos dados locais existentes, preservando os arquivos originais.
 
-- Inicializar e identificar um projeto.
-- Criar, listar, ler, editar, buscar e arquivar notas.
-- Usar escopo de projeto ou escopo global explicitamente.
-- Registrar título, autor, destinatário, datas e estado.
-- Produzir contexto compacto para agentes.
-- Oferecer saída estruturada para automação.
-- Armazenar cada nota em Markdown legível e editável.
-- Evitar perda silenciosa de conteúdo em operações concorrentes feitas pela CLI.
+### Fora desta entrega
 
-### Fora do MVP
+- Vectorize, embeddings, busca semântica, reranking e geração de respostas no servidor.
+- R2, anexos, PDFs e ingestão automática de documentos ou conversas.
+- Interface web, TUI, MCP e integração visual com Maestri ou outros ADEs.
+- Sincronização offline, cache de notas e resolução automática de conflitos.
+- Múltiplos usuários/espaços, permissões detalhadas por projeto e fluxo de aprovação.
+- Histórico completo de versões e restauração por comando; o MVP mantém a versão atual e seu contador de revisão.
+- Tipos específicos de decisão/procedimento/pendência, confirmação de conhecimento e classificação automática.
+- Exclusão definitiva, notificações, execução de tarefas e consulta automática pelos agentes.
+- Compatibilidade completa com todos os comportamentos da CLI Python.
 
-- TUI, interface web e aplicativo próprio.
-- Integração visual ou sincronização automática com notas do Maestri.
-- Servidor MCP, serviço em segundo plano e notificações.
-- Sincronização entre máquinas e colaboração remota.
-- Upload de anexos, busca semântica e embeddings.
-- Execução automática de tarefas a partir de notas.
-- Gestão completa de tarefas, aprovações ou permissões entre usuários.
-- Exclusão definitiva de notas pela CLI; o fluxo inicial usa arquivamento.
+## 4. Arquitetura e fonte oficial
 
-## 5. Experiência proposta
-
-Os comandos abaixo descrevem a interface do MVP implementado.
-
-```bash
-# Registrar o projeto atual
-notes init
-
-# Bruno deixa contexto para agentes
-notes add "Antes de alterar o login, leia docs/auth.md" --to agents
-
-# Um agente registra um retorno
-notes add "Precisamos escolher o provedor de e-mail" --to bruno --author codex
-
-# Consultar e organizar
-notes list
-notes read 12
-notes edit 12
-notes search "autenticação"
-notes archive 12
-
-# Recuperar contexto para uma sessão
-notes context
-
-# Consultar um projeto de outra pasta
-notes list --project meu-app
-
-# Usar notas globais
-notes add "Preferir respostas em português" --global
-notes list --global
-
-# Consumir a saída em uma ferramenta
-notes list --json
+```text
+Bruno / agentes em diferentes máquinas
+                 |
+          CLI notes em Go
+                 | HTTPS + credencial individual
+        API em Cloudflare Worker (TypeScript)
+                 |
+          D1: fonte oficial das notas
 ```
 
-### Comportamento dos comandos
+- A CLI identifica o projeto, recebe texto ou abre o editor e chama a API. Nenhum processo local permanente é necessário.
+- O Worker autentica cada operação, valida entradas e aplica as regras de revisão e escopo.
+- D1 guarda projetos, notas, identidades/credenciais e metadados de importação necessários para evitar duplicatas.
+- Conteúdo Markdown é armazenado no banco; arquivos locais deixam de ser a fonte oficial na versão remota.
+- O MVP exige conexão para consultar ou alterar notas. Erros de rede não podem ser apresentados como sucesso ou lista vazia.
+- As credenciais da API não concedem acesso direto à conta Cloudflare nem ao banco.
+
+## 5. Experiência e contrato da CLI
+
+A interface abaixo está especificada no [contrato v1](docs/REMOTE-CONTRACT.md), mas ainda não está implementada. A [configuração de endpoint e arquivo de credencial](docs/REMOTE-SETUP.md#1-configuração-da-cli-go) é explícita, sem segredos no repositório ou em argumentos.
+
+```bash
+notes init
+notes add "Escolhemos Go para distribuir um binário único" --to agents
+notes list --json
+notes search "Go" --json
+notes read 1 --json
+notes edit 1 --body-file decisao.md --if-revision 'REVISAO-DA-LEITURA'
+notes context --query "distribuição" --json
+notes archive 1 --if-revision 'REVISAO-ATUAL'
+notes add "Preferir respostas em português" --global
+notes list --project UUID-DO-PROJETO
+```
 
 | Comando | Comportamento esperado |
 | --- | --- |
-| `init` | Cria ou reconhece a identidade do projeto e o registra localmente. Reexecutar preserva o ID existente. |
-| `add` | Cria uma nota e devolve ID, escopo e caminho do arquivo. Aceita texto como argumento; sem argumento, lê a entrada padrão quando redirecionada ou abre o editor quando executado em um terminal interativo. |
-| `list` | Lista notas ativas do escopo escolhido com ID, título, destinatário e última atualização. `--archived` permite consultar as arquivadas. |
-| `read <id>` | Exibe o conteúdo completo e os metadados de uma nota. |
-| `edit <id>` | Abre a nota em `$VISUAL` ou `$EDITOR`. Se nenhum editor estiver configurado, orienta como configurá-lo. |
-| `edit <id> --body-file <path>` | Permite a um agente fornecer o novo corpo a partir de um arquivo, preservando os metadados. Aceita uma revisão esperada com `--if-revision`. |
-| `search <texto>` | Busca literal em título e corpo no escopo escolhido, sem distinguir maiúsculas de minúsculas. |
-| `archive <id>` | Marca a nota como arquivada, preservando ID, arquivo e conteúdo. Reexecutar não causa erro. |
-| `context` | Reúne notas ativas relevantes do projeto e notas globais, identificando claramente a origem de cada uma. |
+| `init` | Cria ou reconhece `.notes-project` e registra o UUID no serviço; repetir preserva a identidade. |
+| `add` | Recebe corpo por argumento, stdin ou editor; cria a nota e retorna ID, escopo e revisão. |
+| `list` | Lista notas ativas do escopo; `--archived` seleciona arquivadas. |
+| `read <id>` | Retorna corpo completo e metadados, incluindo revisão, mesmo para uma nota arquivada. |
+| `edit <id>` | Abre rascunho local no editor e envia a alteração condicionada à revisão inicial. |
+| `edit <id> --body-file <path>` | Substitui apenas o corpo, exigindo `--if-revision`. |
+| `search <texto>` | Busca textual nas notas ativas do escopo escolhido; permite consultar arquivadas explicitamente. |
+| `context [--query <texto>]` | Recupera notas ativas do projeto e globais, com origem e limite de tamanho. |
+| `archive <id>` | Arquiva sem apagar conteúdo; exige revisão esperada e é idempotente para o mesmo estado já arquivado. |
+
+- `--global` e `--project` são mutuamente exclusivos. Nomes ambíguos exigem UUID.
+- Sem seleção explícita, usar a configuração ancestral mais próxima. `init` mantém a regra de raiz Git, ou pasta atual fora de Git, da versão local.
+- Clones e máquinas com o mesmo `.notes-project` acessam as mesmas notas quando autenticados no mesmo serviço. O UUID não é credencial.
+- Uma falha no registro remoto pode deixar a configuração local criada; repetir `init` deve concluir o registro sem gerar outro UUID.
+- IDs numéricos são únicos por escopo e nunca reutilizados. Toda referência inclui escopo e ID.
+- Listagens e busca usam atualização decrescente, com ID crescente no desempate.
+- Todos os comandos remotos aceitam `--json`, com `api: "notes-remote"` e `schema_version: 1`. Listagens/buscas retornam resumos paginados; `read` retorna o corpo completo. O [contrato v1](docs/REMOTE-CONTRACT.md) não presume compatibilidade com o JSON local.
+- Resultados vão para stdout; erros para stderr, com saída diferente de zero. JSON não contém logs nem credenciais.
+
+### Entrada de texto e editor
+
+Preservar a precedência atual: argumento explícito; na ausência dele, stdin redirecionado; em terminal, `$VISUAL` ou `$EDITOR`. Preservar UTF-8, parágrafos e Markdown.
+
+Criar com corpo vazio no editor cancela sem gravar; argumento ou stdin vazio gera erro. A edição acontece em rascunho local, sem manter transação aberta no servidor. Falha do editor, de rede ou conflito preserva o rascunho editado e informa seu caminho. O rascunho não constitui armazenamento offline sincronizado.
+
+## 6. Dados, identidade e concorrência
+
+- Projeto: UUID e nome; caminhos da máquina permanecem locais.
+- Nota: ID no escopo, corpo Markdown, título, destinatário, estado, criação, atualização, criador, último editor e revisão.
+- Título inicial: primeira linha não vazia do corpo. Destinatários: `bruno`, `agents` e `all`; padrão `all`.
+- Datas são geradas pelo servidor em UTC. A revisão é retornada pela API e tratada como opaca pelo cliente.
+- Criador e último editor vêm da credencial autenticada. `--author` não pode se passar por outra identidade; eventual autoria histórica importada é metadado separado.
+- Destinatário organiza consultas; não restringe acesso. Todas as credenciais deste espaço têm leitura e escrita em todos os projetos e no global no MVP.
+- Agentes podem criar, editar e arquivar diretamente; não há estado “confirmado” nem aprovação nesta entrega.
+- Atualização deve comparar a revisão e gravar a mutação atomicamente no servidor. Revisão antiga recebe conflito sem sobrescrita; mudança efetiva incrementa a revisão e ausência de mudança preserva revisão e datas.
+- Criações concorrentes recebem IDs distintos. Repetição de criação após timeout usa uma chave de idempotência para não duplicar a nota.
+- Limites definidos no contrato e aplicados pela API: corpo até 65.536 bytes UTF-8, consulta até 256 caracteres/1.024 bytes, páginas até 100 registros e HTTP até 1 MiB. Caracteres são valores escalares Unicode. Busca usa full default case folding Unicode 15.1 (C + F), sem normalizar acentos; detalhes e casos de teste no contrato.
+- Credenciais devem ser armazenadas como verificadores não reversíveis no servidor; segredos não aparecem em logs, notas nem mensagens de erro.
+
+## 7. Contexto e RAG do MVP
+
+O serviço entrega recuperação de contexto para RAG; o modelo do agente consumidor produz a resposta. Não é necessário chamar outro LLM no servidor.
+
+1. O agente envia uma consulta e o projeto selecionado.
+2. A API consulta notas ativas desse projeto e globais, respeitando destinatário.
+3. Retorna notas completas que caibam no orçamento, com escopo, ID, título, autoria, atualização e revisão.
+4. O agente usa o contexto na tarefa e referencia os registros que sustentam sua resposta.
+
+`context` sem consulta mantém a recuperação por escopo. Com `--query`, aplica a mesma busca textual de `search`. O padrão inclui destinatários `agents` e `all`; `--to bruno` inclui `bruno` e `all`, e `--to all` inclui apenas `all`. `--global` consulta somente notas globais.
+
+O orçamento padrão é 12.000 caracteres Unicode dos blocos completos, configurável por `--limit` entre 0 e 48.000. Após filtros, até 100 candidatos são processados; acima disso a API retorna erro explícito `context_too_broad`, orientando refinar a consulta ou usar busca paginada. O [contrato](docs/REMOTE-CONTRACT.md#5-contexto-e-orçamento) fixa os blocos e a contagem. Não cortar notas ao meio; informar omissões e como ler os registros completos. O JSON informa limite, caracteres usados, notas incluídas e omitidas. Metadados do envelope e avisos ficam fora do orçamento.
+
+Uma consulta sem correspondências retorna uma busca vazia bem-sucedida; uma falha de rede ou do serviço retorna erro. O agente não deve tratar falta de evidência como confirmação. Busca textual pode deixar de encontrar sinônimos: essa é uma limitação explícita até a etapa semântica.
+
+Notas são contexto, não autorização para executar ações. Criar uma nota não desperta agentes e não garante leitura humana. A documentação fornece instruções de adoção; a CLI não modifica `AGENTS.md` ou equivalentes automaticamente.
+
+## 8. Migração e compatibilidade
+
+- Manter produto `notes-cli`, comando `notes`, Markdown e UUID de `.notes-project`.
+- A versão Python continua funcional durante a construção e validação do caminho remoto.
+- Importação é explícita, com prévia do que será enviado e relatório de sucessos/falhas; não envia notas silenciosamente.
+- Preservar corpo, escopo, autoria histórica e datas originais como dados de origem. Revisões remotas são novas e a autoria autenticada da importação é registrada separadamente.
+- Importações repetidas identificam a mesma origem sem duplicar notas; colisões ou conteúdos divergentes são relatados, sem sobrescrita automática.
+- O identificador remoto atribuído a cada nota consta do relatório. Tokens de revisão locais não são reutilizados na API remota.
+- Não remover nem alterar o armazenamento Python. Após a transição, edições locais e remotas não são sincronizadas. O [formato de importação](docs/REMOTE-IMPORT.md) fixa `source_id`, hashes, prévia, remapeamento de IDs e relatório; a [tabela de incompatibilidades](docs/REMOTE-SETUP.md#5-incompatibilidades-com-python-e-distribuição) orienta a adaptação de agentes.
+- Publicar instruções de instalação do binário e substituição do executável no PATH, evitando confundir as duas versões.
+
+## 9. Critérios de aceite
+
+1. Uma CLI Go instalada em Linux usa a API sem depender de Python no runtime.
+2. Inicializar em subpasta Git e repetir `init` preserva o UUID; outra máquina com a mesma configuração acessa o mesmo projeto remoto.
+3. Uma nota criada na máquina A é encontrada, lida e usada como contexto por um agente na máquina B.
+4. Credenciais distintas registram autores distintos; credencial ausente, inválida ou revogada não permite ler nem gravar dados.
+5. Criar, listar, ler, editar, buscar e arquivar funcionam em projeto e global, sem misturar projetos diferentes.
+6. Editor, stdin e argumento preservam Markdown/UTF-8; falhas recuperáveis não descartam o rascunho.
+7. Busca retorna somente correspondências textuais no escopo pedido; ausência de resultados é sucesso vazio, enquanto indisponibilidade é erro explícito.
+8. `context` combina os escopos corretos, filtra consulta/destinatário, respeita o orçamento e informa referências, revisões e omissões.
+9. Saídas JSON seguem o contrato documentado; erros não contaminam stdout nem expõem segredos.
+10. Criações simultâneas recebem IDs distintos; repetir uma criação com a mesma chave de idempotência não duplica a nota.
+11. Duas edições baseadas na mesma revisão não se sobrescrevem: uma é aceita e a outra recebe conflito. Operações sem mudança não incrementam revisão.
+12. Arquivadas somem da busca/contexto padrão, permanecem legíveis por ID e o arquivamento repetido não altera novamente revisão ou datas.
+13. Importação de uma amostra local preserva os dados de origem e informa o mapeamento; repetição não duplica notas, divergências são reportadas e os arquivos locais ficam intactos.
+14. O piloto remoto registra um agente recuperando a decisão sobre Go e referenciando a nota de origem, sem geração de resposta dentro do Worker.
+
+## 10. Próximos passos e ordem de entrega
+
+As cinco etapas abaixo têm [milestones e issues no GitHub](docs/ROADMAP.md), com dependências e critérios de conclusão. Mudanças realizadas são registradas em [changelog.md](changelog.md).
+
+| Etapa | Trabalho | Condição para avançar |
+| --- | --- | --- |
+| 1. Contratos e configuração | Definir endpoints, JSON, erros, limites, revisão, idempotência, credenciais e importação; escolher nomes das variáveis/configuração. | Contrato escrito e exemplos revisáveis cobrindo o fluxo entre duas máquinas. |
+| 2. API e persistência | Criar Worker TypeScript, migrações D1, autenticação/revogação, projetos, CRUD, busca textual e contexto limitado. | Testes de integração cobrem credenciais, escopos, concorrência, retries e revisões. |
+| 3. CLI Go | Implementar configuração, identidade local, chamadas HTTP, comandos, JSON, stdin e editor; build Linux. | Fluxo completo funciona contra a API de desenvolvimento com isolamento de dados de teste. |
+| 4. Migração e distribuição | Implementar prévia/importação e relatório; documentar instalação e coexistência com Python. | Amostra importada sem perda ou duplicação; binário instalável em ambiente limpo. |
+| 5. Piloto remoto | Publicar ambiente do MVP, provisionar credenciais e executar cenários reais em duas máquinas. | Registrar evidências dos 14 critérios, falhas de rede e conflito; separar validação automatizada de humana. |
+
+A entrega termina com o piloto remoto e documentação de uso. Os testes Python continuam como referência do comportamento local; testes novos devem validar os riscos reais da API e da CLI remota. A etapa 1 está documentada no [contrato v1](docs/REMOTE-CONTRACT.md), com [cobertura de especificação dos 14 critérios](docs/REMOTE-CONTRACT.md#8-cobertura-dos-14-critérios-do-prd). As etapas 2–5 e o aceite funcional permanecem pendentes; documentação não equivale à implementação.
+
+## 11. Evolução após o piloto
+
+1. **Confiabilidade e recuperação:** exportação completa independente, procedimento de backup/restauração verificado, histórico de versões e observabilidade conforme uso real.
+2. **Busca semântica:** avaliar Vectorize + embeddings ou AI Search; combinar busca textual e semântica, medir recuperação com perguntas reais, invalidar conteúdo antigo e conferir revisão/permissões antes de retorná-lo. O índice é derivado, reconstruível e não substitui D1.
+3. **Conhecimento estruturado:** tipos de registro, referências de origem, registros superados e regra de aprovação para decisões confirmadas, a definir com Bruno.
+4. **Novas interfaces:** MCP para agentes, interface web para Bruno e anexos em R2 quando houver demanda.
+5. **Colaboração ampliada:** permissões por projeto, outros usuários/espaços e eventual modo offline, somente se o uso justificar.
 
-Listagens e buscas devem ter ordenação determinística: atualização mais recente primeiro, com ID como desempate. `read` permite consultar uma nota arquivada pelo ID conhecido.
+## 12. Decisões e pendências
 
-Saída JSON deve estar disponível em `list`, `read`, `search` e `context`, incluindo uma versão do formato. Erros vão para stderr e produzem código de saída diferente de zero; resultados de sucesso vão para stdout.
+Decisões deste MVP: Go na CLI; Worker TypeScript; D1 como fonte oficial; um espaço de Bruno; credenciais individuais; projetos e global; busca textual para recuperação de contexto; importação explícita; sem sincronização offline nem compatibilidade integral com Python.
 
-### Criação de notas com textos longos
+Contrato da etapa 1 fechado em [docs/REMOTE-CONTRACT.md](docs/REMOTE-CONTRACT.md), com decisões de [configuração e provisionamento/revogação](docs/REMOTE-SETUP.md), [esquema D1 e atomicidade](docs/D1-SCHEMA.md) e [origem/mapeamento da importação](docs/REMOTE-IMPORT.md). Recibos idempotentes não expiram no MVP; revisões são tokens opacos; autoria vem da identidade autenticada; importação nunca sobrescreve automaticamente. Essas escolhas não ampliam o escopo. Não restam decisões de contrato bloqueando M2/M3; URL real, recursos e credenciais serão provisionados nas respectivas etapas.
 
-Bruno deve poder escrever uma nota longa no editor ou importar seu conteúdo sem colocá-lo em um argumento do shell. A seleção da fonte segue estas regras:
-
-1. Com argumento de texto, usar esse argumento como corpo, sem consumir ou mesclar a entrada padrão.
-2. Sem argumento de texto e com entrada padrão redirecionada, ler o conteúdo completo até EOF. Isso cobre arquivo, pipe e heredoc, sem abrir editor.
-3. Sem argumento de texto e com entrada padrão ligada a um terminal interativo, abrir o editor configurado: `$VISUAL` tem precedência sobre `$EDITOR`.
-4. Se nenhum editor estiver configurado no fluxo interativo, informar como configurar um e apresentar a alternativa de redirecionar um arquivo. Não esperar que o usuário cole conteúdo no terminal nesse caso.
-
-Exemplos da interface proposta:
-
-```bash
-# Escrever uma nota longa no editor configurado
-notes add --to agents
-
-# Importar o corpo de um arquivo Markdown
-notes add --to agents < contexto.md
-
-# Receber o corpo de outro comando
-cat contexto.md | notes add --to agents
-
-# Colar vários parágrafos pelo shell
-notes add --to agents <<'EOF'
-# Contexto da autenticação
-
-Aqui entra um texto longo, com vários parágrafos.
-
-## Decisões
-- Usar login por e-mail.
-- Manter compatibilidade com as sessões atuais.
-EOF
-```
-
-O fluxo com editor usa um arquivo temporário contendo apenas o corpo Markdown. Ao fechar o editor com sucesso e conteúdo válido, a CLI cria a nota e gera seus metadados. O ID só é alocado ao persistir a nota; o bloqueio de escrita não permanece adquirido enquanto o editor está aberto.
-
-Conteúdo vazio ou composto apenas por espaços e quebras de linha não cria nota. No editor, isso representa cancelamento normal; em argumento ou entrada padrão, deve gerar erro de validação. Se o editor falhar, nenhuma nota é criada e o caminho do rascunho deve ser informado para recuperação.
-
-Todas as formas de entrada preservam parágrafos, caracteres UTF-8 e formatação Markdown. O título segue a regra da primeira linha não vazia. Conteúdo importado é tratado como corpo, inclusive quando começa com um bloco YAML; não pode substituir os metadados gerados pela CLI.
-
-## 6. Identificação do projeto
-
-### Regra principal
-
-A CLI parte do diretório atual. A raiz Git fornece o local padrão para inicializar um projeto; um ID persistente identifica esse projeto depois da inicialização.
-
-Exemplo:
-
-```text
-Diretório atual: ~/Projects/bruno/meu-app/src/components/
-Raiz Git:       ~/Projects/bruno/meu-app/
-Configuração:   ~/Projects/bruno/meu-app/.notes-project
-```
-
-O arquivo `.notes-project` contém:
-
-```yaml
-id: 8d43e572-184e-4a35-875d-2358bcf2427a
-name: meu-app
-```
-
-`id` é um UUID imutável. `name` é um nome de exibição e um possível alias para seleção explícita. Renomear o projeto não altera sua identidade nem desloca suas notas.
-
-### Ordem de resolução
-
-1. `--global` seleciona diretamente o escopo global e dispensa resolução de projeto.
-2. `--project <nome-ou-id>` seleciona um projeto já conhecido pelo registro local.
-3. Sem seleção explícita, procurar `.notes-project` na pasta atual e nos ancestrais, usando o arquivo mais próximo.
-4. Sem esse arquivo, consultar a raiz Git com `git rev-parse --show-toplevel`. A raiz é uma candidata à inicialização; ainda não é uma identidade persistente.
-5. Sem configuração e sem Git, orientar o uso de `notes init` na pasta desejada ou a seleção de `--global`.
-
-`--global` e `--project` são mutuamente exclusivos. Um arquivo `.notes-project` inválido gera erro informativo; a CLI não deve ignorá-lo e selecionar outro projeto silenciosamente.
-
-### Inicialização e descoberta
-
-- Dentro de um repositório sem configuração, `notes init` cria `.notes-project` na raiz Git, mesmo quando executado em uma subpasta.
-- Fora de Git e sem configuração ancestral, `notes init` usa a pasta atual como raiz.
-- Com uma configuração válida já encontrada, `notes init` preserva a identidade e atualiza o registro local.
-- Comandos em um projeto ainda não inicializado informam a raiz detectada e pedem a execução de `notes init`; não criam uma identidade implicitamente.
-- Uma configuração válida encontrada na navegação pode ser registrada automaticamente para posterior uso com `--project`.
-- O registro local guarda ID, nome e caminhos conhecidos; as notas são localizadas pelo ID, não pelo caminho.
-- Nomes duplicados são permitidos. Seleção ambígua por nome retorna as opções com seus IDs e exige escolha explícita.
-- Um caminho conhecido que deixou de existir não remove o projeto nem suas notas. A seleção explícita pelo ID continua funcionando.
-
-### Mudanças de pasta, clones e worktrees
-
-- Mover uma pasta com `.notes-project` preserva a identidade.
-- Clones e worktrees com o mesmo arquivo compartilham a identidade e acessam as mesmas notas no armazenamento local daquela máquina.
-- Versionar `.notes-project` é recomendado quando clones e worktrees devem compartilhar a identidade. Clones sem o arquivo não são vinculados automaticamente pela URL do remoto.
-- Em outra máquina, possuir o mesmo ID não transfere o conteúdo: sincronização de notas está fora do MVP.
-- Copiar `.notes-project` também copia a identidade. Criar uma identidade independente a partir de uma cópia não será uma operação automática no MVP.
-- A primeira versão não oferece um comando para inicializar um projeto aninhado dentro de outro já configurado.
-
-O nome da pasta e a URL do remoto não são identificadores persistentes, pois podem mudar ou ser ambíguos.
-
-## 7. Armazenamento e formato
-
-Usar `$XDG_DATA_HOME/notes` como diretório de dados; quando a variável não estiver definida, usar `~/.local/share/notes`.
-
-```text
-~/.local/share/notes/
-├── projects.json
-├── global/
-│   └── 001-preferencias.md
-└── projects/
-    └── 8d43e572-184e-4a35-875d-2358bcf2427a/
-        ├── 001-contexto.md
-        └── 002-provedor-email.md
-```
-
-O UUID organiza o armazenamento por projeto. Nomes amigáveis são resolvidos pelo registro local. Os arquivos ficam fora do repositório por padrão; somente `.notes-project` precisa estar na raiz do projeto.
-
-Cada nota possui front matter YAML e corpo Markdown. Exemplo ilustrativo:
-
-```markdown
----
-schema_version: 1
-id: 12
-title: Escolher provedor de e-mail
-author: codex
-to: bruno
-status: active
-created_at: 2026-10-23T15:00:00Z
-updated_at: 2026-10-23T15:00:00Z
-revision: 1
----
-
-Precisamos escolher o provedor de e-mail antes de implementar os envios.
-```
-
-### Regras dos dados
-
-- ID numérico único dentro do escopo, sem reutilização de IDs arquivados.
-- Toda saída que mistura escopos identifica projeto ou escopo global junto do ID.
-- Destinatários iniciais: `bruno`, `agents` e `all`; padrão: `all`.
-- `--author` registra quem escreveu; sem a opção, usar o nome do usuário local. Agentes devem informar seu nome ao criar notas.
-- Autor e destinatário são metadados organizacionais, sem função de autenticação ou controle de acesso.
-- Título derivado da primeira linha não vazia ao criar a nota; pode ser alterado na edição sem mudar o ID.
-- Datas armazenadas em UTC e exibidas no fuso local quando a saída for destinada a pessoas.
-- Estado inicial `active`; arquivamento muda para `archived`.
-- A revisão aumenta em cada mutação feita pela CLI. Operações condicionais detectam também alterações diretas do arquivo, mesmo quando a revisão não foi atualizada pelo editor externo.
-- Editar o corpo pela CLI preserva ID e data de criação. Alterações inválidas dos metadados são rejeitadas sem destruir a nota anterior.
-- Arquivos inválidos devem ser identificados com seu caminho. Em consultas agregadas, preservar a apresentação das demais notas e indicar a ocorrência por stderr e código de saída.
-
-Nenhum banco de dados ou serviço em execução é necessário no MVP. Eventuais índices futuros devem ser reconstruíveis a partir das notas e do registro de projetos.
-
-## 8. Integração com agentes e ADEs
-
-Qualquer agente com acesso ao terminal e ao mesmo armazenamento local pode usar a CLI. O acesso pelo editor ocorre diretamente nos arquivos Markdown.
-
-A existência da CLI não faz os agentes consultarem notas automaticamente. Cada ferramenta deve receber instruções no seu mecanismo de contexto, como `AGENTS.md`, `CLAUDE.md` ou equivalente.
-
-Texto sugerido para adoção:
-
-> Ao começar uma tarefa, execute `notes context`. Registre decisões e pendências relevantes. Use notas dirigidas a Bruno para perguntas que possam esperar; perguntas que bloqueiam a tarefa devem ser feitas na conversa. Ao criar notas, informe seu nome com `--author`.
-
-Essas instruções serão fornecidas na documentação; o MVP não altera arquivos de configuração de outros agentes automaticamente.
-
-### Contexto para agentes
-
-- `notes context` inclui notas ativas do projeto selecionado e notas globais destinadas a `agents` ou `all`.
-- `--to bruno` permite gerar uma visão dos retornos para Bruno, incluindo notas destinadas a `all`.
-- A saída informa escopo, ID, título e corpo, com separação clara entre notas.
-- O limite de saída deve ser configurável; quando houver omissão, informar os IDs omitidos e como ler o conteúdo completo.
-- Notas são contexto consultado durante a tarefa. Seu conteúdo não executa comandos nem concede autorização por si só.
-- Criar uma nota não envia uma mensagem, não desperta outro agente e não garante que Bruno já a leu.
-
-Uma integração futura com Maestri deve definir se exibe os mesmos arquivos ou sincroniza cópias. A estratégia depende das interfaces efetivamente disponíveis e não integra o MVP.
-
-## 9. Concorrência e confiabilidade
-
-- Dois agentes devem poder criar notas simultaneamente sem colisão de IDs.
-- Gravações feitas pela CLI devem usar substituição atômica e coordenação por escopo para proteger notas e alocação de IDs.
-- Atualizações do registro de projetos também devem ser coordenadas para evitar perda de entradas.
-- Uma edição interativa compara o estado lido inicialmente com o arquivo atual antes de salvar. Se outra edição ocorreu, preservar a versão atual e o conteúdo proposto, informando o conflito.
-- Uma edição automatizada pode exigir a revisão obtida em `read --json` usando `--if-revision`. Uma revisão desatualizada falha sem sobrescrever conteúdo.
-- Sem revisão esperada, uma edição automatizada representa a substituição explícita do corpo atual; a documentação deve orientar agentes a usar a condição de revisão.
-- Leitores não devem observar um arquivo parcialmente gravado pela CLI.
-- Edições diretas por ferramentas externas não participam dos bloqueios da CLI. O produto deve detectar alterações quando possível e documentar que a garantia de coordenação se aplica às operações pela CLI.
-- Falhas de permissão, configuração inválida e conflitos devem apresentar uma causa e uma ação de recuperação compreensíveis.
-
-## 10. Critérios de aceite do MVP
-
-1. Inicializar um repositório a partir de uma subpasta cria `.notes-project` na raiz Git; repetir a operação preserva o UUID.
-2. Inicializar uma pasta fora de Git permite usar notas a partir dela e de suas subpastas.
-3. Executar um comando em um repositório sem configuração informa a raiz candidata e orienta a inicialização, sem criar notas ou IDs silenciosamente.
-4. Mover um projeto inicializado preserva o acesso às suas notas; clones e worktrees com o mesmo ID usam as mesmas notas na mesma máquina.
-5. Dois projetos com o mesmo nome mantêm notas separadas, e a seleção ambígua por nome solicita um ID.
-6. `add`, `list`, `read`, `edit`, `search` e `archive` funcionam para notas de projeto e para notas globais.
-7. Uma nota continua legível como Markdown e pode ser aberta pelo editor configurado.
-8. Notas arquivadas deixam de aparecer nas consultas padrão e em `context`, mas continuam acessíveis pelo ID e por `list --archived`.
-9. `context` combina os escopos corretos e respeita destinatário e limite de saída, informando omissões.
-10. Saídas JSON são válidas, identificam os escopos e incluem revisão para edição condicional.
-11. Criações simultâneas produzem IDs distintos; edição interativa concorrente ou edição condicional desatualizada não perde conteúdo silenciosamente.
-12. Um agente consegue registrar um retorno para Bruno, e Bruno consegue consultá-lo em uma nova sessão sem depender da conversa anterior.
-13. `notes add` sem texto no terminal abre `$VISUAL` ou, na sua ausência, `$EDITOR`; salvar um corpo válido cria a nota, e sair com corpo vazio cancela sem criá-la.
-14. Arquivo redirecionado, pipe e heredoc criam notas com textos longos preservando UTF-8 e Markdown, sem abrir editor; um argumento explícito tem precedência e não é mesclado com stdin.
-15. Ausência de editor no fluxo interativo, falha do editor e entrada padrão vazia recebem tratamento documentado, sem criar notas parciais ou vazias.
-
-## 11. Validação prevista
-
-A implementação deverá validar o fluxo completo em diretórios temporários: inicialização, criação, consulta, edição, busca, contexto e arquivamento. Os cenários de identidade devem incluir mudança de pasta, nomes duplicados e worktrees.
-
-A criação de notas longas deve cobrir argumento, arquivo redirecionado, pipe, heredoc e terminal interativo, usando um editor controlado para verificar precedência de `$VISUAL`, fallback para `$EDITOR`, cancelamento, falha e preservação de conteúdo. O reconhecimento de terminal deve ser verificado com um pseudoterminal.
-
-Concorrência deve ser verificada com processos simultâneos reais, incluindo criação de notas e edição com revisão desatualizada. A usabilidade deve ser conferida manualmente no terminal e com um agente seguindo as instruções documentadas.
-
-A implementação e os testes estão no repositório. A matriz de evidências dos 15 critérios e o piloto automatizado estão em [docs/VALIDATION.md](docs/VALIDATION.md). O piloto não representa validação humana de Bruno.
-
-## 12. Etapas de entrega
-
-1. Definir a linguagem, o empacotamento e o nome final do executável.
-2. Implementar identidade, armazenamento Markdown e comandos essenciais.
-3. Implementar contexto, saída JSON e edição condicional para agentes.
-4. Validar concorrência e realizar um piloto automatizado dos fluxos de Bruno e agente em um projeto Git representativo, conforme a instrução de execução.
-5. Avaliar TUI e integração com Maestri a partir do uso observado.
-
-## 13. Decisões em aberto
-
-Decisões do MVP implementado:
-
-- Python 3.11+ em Linux; PyYAML para front matter; instalação por ambiente virtual, wheel ou sdist.
-- Produto/pacote `notes-cli`; executável `notes`. Ambientes virtuais isolam comandos homônimos.
-- Contexto limitado por padrão a 12.000 caracteres Unicode dos blocos de notas completos; `--limit` configura o orçamento, excluindo avisos de omissão e envelope JSON.
-- Revisão condicional opaca com contador e SHA-256 do arquivo; `revision_number` expõe o contador no JSON.
-- Piloto automatizado com sessões independentes, conforme instrução de execução, sem presumir participação humana.
-
-Permanecem fora do MVP:
-- Necessidade futura de restauração por comando, tags e histórico de alterações.
-- Estratégia de sincronização entre máquinas, se necessária após o piloto.
-- Forma de integração visual com Maestri e outros ADEs.
-
-Essas decisões não impedem a especificação do MVP e devem ser resolvidas na etapa correspondente, sem ampliar seu escopo inicial.
+Histórico completo, aprovação de decisões e permissões por projeto não são requisitos desta entrega. A intenção de segundo cérebro orienta a evolução, mas não antecipa esses recursos.
