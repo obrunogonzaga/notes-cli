@@ -1,5 +1,11 @@
 # notes-cli
 
+> A versão disponível abaixo é a v0.1 local em Python. O [PRD vigente](PRD.md)
+> define o próximo MVP remoto (CLI Go + Worker + D1), ainda não implementado.
+
+Acompanhamento: [changelog](changelog.md) e [milestones e issues](docs/ROADMAP.md).
+O [contrato remoto v1](docs/REMOTE-CONTRACT.md) documenta HTTP/JSON, [configuração e incompatibilidades](docs/REMOTE-SETUP.md), [D1](docs/D1-SCHEMA.md) e [importação](docs/REMOTE-IMPORT.md); os comandos remotos desses documentos ainda não estão disponíveis. Os exemplos a seguir são da versão Python local.
+
 CLI local de notas Markdown compartilhadas entre Bruno e agentes, independente do ADE.
 
 Requer Linux e Python 3.11 ou posterior. Executável: `notes`. Não requer banco de dados nem serviço.
@@ -82,7 +88,7 @@ resolver um erro.
 .venv/bin/python -m build
 ```
 
-MVP 0.1.0 implementado. Veja [PRD](PRD.md) e a
+MVP 0.1.0 implementado. Veja [PRD local v0.1](docs/PRD-local-v0.1.md) e a
 [matriz de validação](docs/VALIDATION.md) com os 15 critérios, testes e piloto
 automatizado de Bruno/agente. Nenhuma validação humana é presumida.
 

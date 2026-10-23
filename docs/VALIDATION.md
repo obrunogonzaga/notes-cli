@@ -1,4 +1,7 @@
-# Validação do MVP
+# Validação do MVP local v0.1
+
+Este documento valida os critérios do [PRD local v0.1](PRD-local-v0.1.md).
+O [MVP remoto vigente](../PRD.md) ainda não foi implementado nem validado. A [matriz de cobertura do contrato remoto](REMOTE-CONTRACT.md#8-cobertura-dos-14-critérios-do-prd) relaciona os 14 critérios remotos a regras de especificação e às validações futuras; não usa os testes locais como evidência de aceite remoto.
 
 Validação automatizada em Linux, 23/10/2026. Suite local: 42 testes passando,
 sem skips. A CI executa lint, testes e build em Python 3.11 e 3.14.
