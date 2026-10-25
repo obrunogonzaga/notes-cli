@@ -1,6 +1,6 @@
 # Esquema D1 e invariantes do MVP
 
-Parte normativa do [contrato v1](REMOTE-CONTRACT.md), [#7](https://github.com/obrunogonzaga/notes-cli/issues/7). O esquema abaixo de M1 está implementado nas [migrações](../worker/migrations/) da #8, com [verificações no D1 local e instruções de execução](WORKER-DEVELOPMENT.md). As estratégias de API/concorrência da seção 2 continuam como requisitos para #9–#11/#14; esta base não implementa as rotas de negócio.
+Parte normativa do [contrato v1](REMOTE-CONTRACT.md), [#7](https://github.com/obrunogonzaga/notes-cli/issues/7). O esquema abaixo de M1 está implementado nas [migrações](../worker/migrations/) da #8, com [verificações no D1 local e instruções de execução](WORKER-DEVELOPMENT.md). A #9 acrescenta autenticação, operação de credenciais e guardas reutilizáveis sem mudar migrações. As estratégias de API/concorrência da seção 2 continuam como requisitos para #10–#11/#14; esta base não implementa as rotas de negócio.
 
 ## 1. Esquema lógico inicial
 
@@ -139,7 +139,14 @@ Não retornar campos `meta` de D1, SQL ou stack ao cliente. Traduzir conflito de
 ## 3. Validação exigida em M2
 
 - Concluído na #8: migrações no D1 local isolado, atualização/reexecução, FKs, triggers, índices, seed global e rollback de batches. [Evidências e limites](WORKER-DEVELOPMENT.md#resultados-e-limites-registrados). Testes funcionais abaixo continuam pendentes; D1 local não substitui validação remota.
+- Verificado na #9: autenticação no primário a cada tentativa, autoria por identidade, rotação e revogação/desativação sem remover histórico. `activeCredentialGuard(auth)` fornece predicado EXISTS parametrizado por credencial/identidade; `activeCredentialStatement(DB, auth)` seleciona estado ativo no mesmo batch. Fixtures SQL demonstram autoria distinta e edição por outra identidade, acesso comum aos três destinatários, bloqueio de INSERT/UPDATE depois do commit de revogação/desativação e recibo disponível para outra credencial da mesma identidade. Não são rotas CRUD, replay HTTP ou um teste probabilístico de corrida.
 - Disparar adds simultâneos distintos e com mesma chave, resposta perdida, mesma chave em outro scope e credencial rotacionada. Verificar uma nota por recibo e sequência sem reutilização.
 - Forçar falha entre nota/recibo e nota/origem: rollback integral, inclusive contador/projeto. Corrida com revogação não pode gravar depois de perder a condição de auth.
 - Duas revisões concorrentes, no-op, archive repetido, token inválido, campos Unicode e consulta com %, _, aspas, acentos e emoji. Checar limites exatos e acima do limite.
 - Importar origens iguais/divergentes em paralelo, preservar alteração remota posterior, remapear IDs e validar ausência de sobrescrita. Nenhum teste toca banco/dados reais de Bruno.
+
+### Integração obrigatória dos handlers da #10
+
+Usar `authenticate(request, DB)` de [auth.ts](../worker/src/auth.ts), passando seu contexto opaco aos handlers. `authenticatedAuthor(auth)` é a única origem de `{id,name}` para autoria; em INSERT, usar o ID para created_by/updated_by, em UPDATE efetivo somente para updated_by, preservando o criador. Validar/rejeitar campos desconhecidos, inclusive author/created_by/updated_by, na futura entrada HTTP; ignorar esses campos no helper não substitui a validação da rota.
+
+Cada INSERT/UPDATE deve incluir `activeCredentialGuard(auth).sql` na condição e seus bindings na ordem correspondente, dentro do batch transacional da operação. No mesmo batch, selecionar `activeCredentialStatement(DB, auth)` antes de classificar snapshot/recibo/conflito/no-op. Se active = 0, responder 401 antes de devolver dados ou replay. A identidade do recibo é `auth.identity.id`, nunca credentialId. Reexecutar authenticate em cada tentativa HTTP. Não mover a guarda para um SELECT anterior, não aceitar contexto do corpo e não usar destinatário como predicado de autorização. Os helpers não executam mutações automaticamente; cabe à #10 integrá-los em todos os caminhos e provar as invariantes HTTP completas.

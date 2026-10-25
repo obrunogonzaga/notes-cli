@@ -1,6 +1,6 @@
 # Contrato do MVP remoto — HTTP/JSON v1
 
-Especificação normativa de 23/10/2026 para [#7](https://github.com/obrunogonzaga/notes-cli/issues/7), baseada no [PRD](../PRD.md). **Não implementada.** Fecha M1 e orienta M2–M4; não comprova o aceite funcional do MVP. A versão disponível continua sendo Python local.
+Especificação normativa de 23/10/2026 para [#7](https://github.com/obrunogonzaga/notes-cli/issues/7), baseada no [PRD](../PRD.md). Infraestrutura #8 e autenticação #9 implementadas e verificadas no D1 local; rotas de negócio e CLI Go pendentes. Fecha M1 e orienta M2–M4; não comprova o aceite funcional do MVP. A versão disponível continua sendo Python local.
 
 Documentos integrantes: [configuração, operação e compatibilidade](REMOTE-SETUP.md), [persistência D1](D1-SCHEMA.md) e [importação](REMOTE-IMPORT.md). Em caso de dúvida, o PRD define escopo; estes documentos fixam as decisões de implementação dentro dele. Mudanças incompatíveis exigem revisão conjunta e nova versão do contrato.
 
@@ -8,6 +8,7 @@ Documentos integrantes: [configuração, operação e compatibilidade](REMOTE-SE
 
 - Endpoint configurado é a origem, sem `/v1`: `https://notes.example.invalid`. Todas as rotas abaixo começam com `/v1`. HTTPS obrigatório, exceto loopback de desenvolvimento conforme [configuração](REMOTE-SETUP.md#1-configuração-da-cli-go).
 - Toda rota exige `Authorization: Bearer <token>`, inclusive descoberta de projetos e prévia de importação. Um espaço de Bruno por banco/ambiente; sem parâmetro de usuário ou tenant. Todas as identidades têm leitura/escrita em todo o espaço. Destinatário não é ACL.
+- Na base atual (#9), `/v1` e qualquer caminho sob `/v1/`, de qualquer método, autenticam antes de classificar rota, recurso ou entrada. Falha de credencial recebe 401 uniforme com `WWW-Authenticate: Bearer`; credencial válida chega a 404 porque os handlers ainda não existem. `/healthz` é sonda pública de infraestrutura, fora da API de dados, sem identidade/notas na resposta. Falha D1 durante autenticação recebe 503 genérico com Retry-After: 1.
 - Requisições com corpo: `Content-Type: application/json` (charset=utf-8 opcional), UTF-8 sem BOM, objeto JSON com `schema_version: 1`. GET não recebe corpo. `Accept: application/json`; ausência equivale a JSON. Outro tipo explicitamente solicitado recebe 406. Respostas: `application/json; charset=utf-8` e `Cache-Control: no-store`.
 - `api: "notes-remote"` e `schema_version: 1` estão em **todos** os envelopes, de sucesso ou erro. O discriminador evita confundir este JSON com o `schema_version: 1` do Python. Versão ausente/incompatível no corpo: 400 `unsupported_schema_version`. Uma rota `/v2` não implementada recebe 404, sem fallback silencioso.
 - Clientes ignoram campos novos nas respostas; servidor rejeita campos de entrada e parâmetros de consulta desconhecidos (400). Duplicatas de chaves JSON/parâmetros, tipos errados, `null` onde não permitido e UTF-8/surrogates inválidos são rejeitados. Em corpos JSON não há coerção de strings em números/booleanos. Na query string, page_size e limit usam decimal canônico não negativo (sem sinal, fração ou zeros iniciais, exceto o próprio 0), dentro dos intervalos abaixo.
@@ -318,19 +319,19 @@ Esta matriz é revisão de **especificação**, não evidência de funcionalidad
 | 1 | Go/Linux sem runtime Python; [setup](REMOTE-SETUP.md#5-incompatibilidades-com-python-e-distribuição). | M3/M4: binário em Linux limpo, sem Python. |
 | 2 | UUID, raiz Git, ancestral, PUT idempotente; seção 3. | M3: init em subpasta, repetição após falha e segundo clone. |
 | 3 | Mesmo endpoint/UUID, credenciais distintas; [duas máquinas](REMOTE-SETUP.md#4-fluxo-entre-duas-máquinas). | M5: criar A, buscar/ler/contextualizar B. |
-| 4 | Autoria e revogação; seções 1/7 e [runbook](REMOTE-SETUP.md#3-provisionamento-rotação-e-revogação). | M2: ausente/inválida/revogada, duas identidades e corrida com revogação. |
+| 4 | Autoria e revogação; seções 1/7 e [runbook](REMOTE-SETUP.md#3-provisionamento-rotação-e-revogação). | #9: proteção HTTP, duas identidades, rotação/revogação/desativação e commits SQL sintéticos verificados no D1 local. #10: integrar autoria/guardas aos handlers reais, rejeitar campos de autoria e validar concorrência/replay HTTP. |
 | 5 | Rotas, scopes e filtros; seção 3. | M2/M3: operações em global e dois UUIDs, IDs coincidentes e isolamento. |
 | 6 | Preservação de texto/rascunho; seções 2/3 e setup. | M3: argumento/stdin/editor, CRLF/UTF-8, cancelamento, rede e conflito. |
 | 7 | Literal Unicode, vazio e erro distintos; seções 4/6. | M2: tabela de busca, filtros, paginação, banco/rede indisponível. |
 | 8 | Destinatários, blocos, orçamento e omissões; seção 5. | M2/M3: limite exato/zero, emoji, nota grande omitida, menor posterior, >100 candidatos e escopos. |
-| 9 | Discriminador/versão, envelopes e stderr; seções 1/6. | M2/M3: JSON válido, unknown fields, sem logs/token em erros/stdout. |
+| 9 | Discriminador/versão, envelopes e stderr; seções 1/6. | #9: envelopes 401/503 e I/O operacional sem tokens/verificadores nos logs/erros testados. M2/M3: demais envelopes, unknown fields e saída da CLI Go. |
 | 10 | Sequência e deduplicação permanente; seção 7 e D1. | M2: adds simultâneos, mesma chave simultânea, resposta perdida, troca de token e chave divergente. |
 | 11 | CAS e no-op; seção 3 e D1. | M2: duas edições da mesma revisão, no-op atual, no-op obsoleto e leitura posterior. |
 | 12 | Arquivo conserva conteúdo, legível, no-op; seção 3. | M2/M3: busca/contexto/list padrão excluem, read inclui, archive repetido mantém revisão/datas. |
 | 13 | [Manifesto, identidade e mapeamento](REMOTE-IMPORT.md). | M4: amostra Python, hashes antes/depois, repetição, origem divergente e IDs remapeados. |
 | 14 | Recuperação textual sem LLM; seção 5 e duas máquinas. | M5: agente real recupera decisão Go e cita escopo/ID/revisão; evidência distinta de simulação. |
 
-Decisões de contrato para M2/M3 estão fechadas. Permanecem trabalhos de implementação e operação: implementar autenticação/rotas sobre a [infraestrutura Worker/migrações da #8](WORKER-DEVELOPMENT.md), CLI Go, importador, distribuição e piloto; escolher a URL real e provisionar ambientes/credenciais em M2/M5. Não há credenciais, recursos Cloudflare ou evidência de piloto criados por esta especificação.
+Decisões de contrato para M2/M3 estão fechadas. Permanecem trabalhos de implementação e operação: integrar autenticação/autoria às rotas sobre a [base Worker/D1 das #8–#9](WORKER-DEVELOPMENT.md), CLI Go, importador, distribuição e piloto; escolher a URL real e provisionar ambientes/credenciais em M2/M5. Só fixtures sintéticas locais foram emitidas em testes; nenhuma credencial real, recurso Cloudflare ou evidência de piloto foi criada.
 
 ## 9. Revisão de especificação da issue #7
 

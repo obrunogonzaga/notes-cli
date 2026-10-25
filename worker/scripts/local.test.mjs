@@ -92,7 +92,7 @@ test('Wrangler local: new DB, incremental migration, replay and Worker + persist
   assert.equal(body.request_id, response.headers.get('X-Request-ID'));
   assert.equal(response.headers.get('Cache-Control'), 'no-store');
   const business = await fetch(`${url}/v1/scopes/global/notes`);
-  assert.equal(business.status, 404);
+  assert.equal(business.status, 401);
   await business.text();
   assert.doesNotMatch(logs, /fallback|supports compatibility dates up to/i);
 });
